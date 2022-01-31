@@ -124,6 +124,7 @@ function cloudaddons_upgradecheck($addonids) {
 		$array = cloudaddons_getmd5($addonid);
 		$post[] = 'rid['.$addonid.']='.$array['RevisionID'].'&sn['.$addonid.']='.$array['SN'].'&rd['.$addonid.']='.$array['RevisionDateline'];
 	}
+        return;
 	return cloudaddons_open('&mod=app&ac=validator&ver=2', implode('&', $post), 15);
 }
 
