@@ -34,7 +34,7 @@ if($page === 1 && !empty($_G['setting']['antitheft']['allow']) && empty($_G['set
 	helper_antitheft::check($_G['forum_thread']['tid'], 'tid');
 }
 
-if($_G['setting']['cachethreadlife'] && $_G['forum']['threadcaches'] && !$_G['uid'] && $page == 1 && !$_G['forum']['special'] && empty($_GET['do']) && empty($_GET['from']) && empty($_GET['threadindex']) && !defined('IN_ARCHIVER') && !defined('IN_MOBILE') && !IS_ROBOT) {
+if($_G['setting']['cachethreadlife'] && $_G['forum']['threadcaches'] && !$_G['uid'] && $page == 1 && !$_G['forum']['special'] && empty($_GET['action']) && empty($_GET['do']) && empty($_GET['from']) && empty($_GET['threadindex']) && !defined('IN_ARCHIVER') && !defined('IN_MOBILE') && !IS_ROBOT) {
 	viewthread_loadcache();
 }
 
@@ -178,7 +178,7 @@ if(empty($_G['forum']['allowview'])) {
 	if(!$_G['forum']['viewperm'] && !$_G['group']['readaccess']) {
 		showmessage('group_nopermission', NULL, array('grouptitle' => $_G['group']['grouptitle']), array('login' => 1));
 	} elseif($_G['forum']['viewperm'] && !forumperm($_G['forum']['viewperm'])) {
-		showmessagenoperm('viewperm', $_G['fid']);
+		showmessagenoperm('viewperm', $_G['fid'], $_G['forum']['formulaperm']);
 	}
 
 } elseif($_G['forum']['allowview'] == -1) {
@@ -787,6 +787,7 @@ if($postusers) {
 		if(getstatus($post['status'], 6)) {
 			$locationpids[] = $pid;
 		}
+		$postusers[$post['authorid']]['field_position'] = $postusers[$post['authorid']]['position'];
 		$post = array_merge($postlist[$pid], (array)$postusers[$post['authorid']]);
 		$postlist[$pid] = viewthread_procpost($post, $_G['member']['lastvisit'], $ordertype, $maxposition);
 	}

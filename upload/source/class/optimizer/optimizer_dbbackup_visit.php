@@ -4,14 +4,14 @@
  *      [Discuz!] (C)2001-2099 Comsenz Inc.
  *      This is NOT a freeware, use is subject to license terms
  *
- *      $Id: optimizer_dbbackup_clean.php 31344 2012-08-15 04:01:32Z zhangjie $
+ *      $Id$
  */
 
 if(!defined('IN_DISCUZ')) {
 	exit('Access Denied');
 }
 
-class optimizer_dbbackup_clean {
+class optimizer_dbbackup_visit {
 
 	public function __construct() {
 
@@ -23,9 +23,9 @@ class optimizer_dbbackup_clean {
 		$filecount = 0;
 		$this->check_exportfile($exportlog, $exportziplog, $exportsize, $filecount);
 		if(!$filecount) {
-			$return = array('status' => 0, 'type' => 'none', 'lang' => lang('optimizer', 'optimizer_dbbackup_clean_safe'));
+			$return = array('status' => 0, 'type' => 'none', 'lang' => lang('optimizer', 'optimizer_dbbackup_visit_safe'));
 		} else {
-			$return = array('status' => 1, 'type' => 'notice', 'lang' => lang('optimizer', 'optimizer_dbbackup_clean_delete', array('filecount' => $filecount)));
+			$return = array('status' => 1, 'type' => 'notice', 'lang' => lang('optimizer', 'optimizer_dbbackup_visit_delete', array('filecount' => $filecount)));
 		}
 		return $return;
 	}
@@ -73,8 +73,12 @@ class optimizer_dbbackup_clean {
 							'dateline' => filemtime($entry),
 							'size' => $filesize
 						);
-						$filecount++;
-						$exportsize[$key] += $filesize;
+						$testurl = str_replace(DISCUZ_ROOT.'./data/', getglobal('siteurl').'data/', $entry);
+						$content = dfsockopen($testurl);
+						if(!empty($content)) {
+							$filecount++;
+							$exportsize[$key] += $filesize;
+						}
 					} elseif(preg_match("/\.zip$/i", $entry)) {
 						$key = preg_replace('/^(.+?)(\-\d+)\.zip$/i', '\\1', basename($entry));
 						$filesize = filesize($entry);
@@ -84,7 +88,11 @@ class optimizer_dbbackup_clean {
 							'size' => $filesize,
 							'dateline' => filemtime($entry)
 						);
-						$filecount++;
+						$testurl = str_replace(DISCUZ_ROOT.'./data/', getglobal('siteurl').'data/', $entry);
+						$content = dfsockopen($testurl);
+						if(!empty($content)) {
+							$filecount++;
+						}
 					}
 				}
 			}
@@ -92,5 +100,3 @@ class optimizer_dbbackup_clean {
 		}
 	}
 }
-
-?>
