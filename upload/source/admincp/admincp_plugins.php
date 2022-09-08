@@ -205,7 +205,11 @@ if(!$operation) {
 				$plugin['modules'] = dunserialize($plugin['modules']);
 				$k = array_keys($_GET['displayordernew'][$plugin['pluginid']]);
 				$v = array_values($_GET['displayordernew'][$plugin['pluginid']]);
-				$plugin['modules'][$k[0]]['displayorder'] = $v[0];
+				foreach($plugin['modules'] as $key => $value) {
+					if(in_array($value['type'], array(11, 28))) {
+						$plugin['modules'][$key]['displayorder'] = $v[0];
+					}
+				}
 				C::t('common_plugin')->update($plugin['pluginid'], array('modules' => serialize($plugin['modules'])));
 			}
 		}
@@ -518,7 +522,7 @@ if(!$operation) {
 	$dir = substr($plugin['directory'], 0, -1);
 
 	if(!$_GET['confirmed']) {
-
+		cloudaddons_validator($dir.'.plugin');
 		$file = DISCUZ_ROOT.'./source/plugin/'.$dir.'/discuz_plugin_'.$dir.($modules['extra']['installtype'] ? '_'.$modules['extra']['installtype'] : '').'.xml';
 		$upgrade = false;
 		if(file_exists($file)) {
@@ -1068,7 +1072,7 @@ if(!$operation) {
 				'<option h="1001" e="inc" value="15">'.cplang('plugins_edit_modules_type_15').'</option>'.
 				'<option h="1001" e="inc" value="16">'.cplang('plugins_edit_modules_type_16').'</option>'.
 				'<option h="1101" e="inc" value="3">'.cplang('plugins_edit_modules_type_3').'</option>'.
-				'<option h="1100" e="inc" value="3">'.cplang('plugins_edit_modules_type_29').'</option>'.
+				'<option h="1100" e="inc" value="29">'.cplang('plugins_edit_modules_type_29').'</option>'.
 				'</optgroup>'.
 				'<optgroup label="'.cplang('plugins_edit_modules_type_g2').'">'.
 				'<option h="0011" e="class" value="11">'.cplang('plugins_edit_modules_type_11').'</option>'.

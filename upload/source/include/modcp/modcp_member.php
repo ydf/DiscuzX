@@ -91,7 +91,18 @@ if($op == 'edit') {
 			$banexpirynew = $banexpirynew > TIMESTAMP ? $banexpirynew : 0;
 			if($banexpirynew) {
 				$member['groupterms'] = $member['groupterms'] && is_array($member['groupterms']) ? $member['groupterms'] : array();
-				$member['groupterms']['main'] = array('time' => $banexpirynew, 'adminid' => $member['adminid'], 'groupid' => $member['groupid']);
+				if($member['groupid'] == 4 || $member['groupid'] == 5) {
+					$member['groupterms']['main']['time'] = $banexpirynew;
+					if (empty($member['groupterms']['main']['groupid'])) {
+						$groupnew = C::t('common_usergroup')->fetch_by_credits($member['credits']);
+						$member['groupterms']['main']['groupid'] = $groupnew['groupid'];
+					}
+					if (!isset($member['groupterms']['main']['adminid'])) {
+						$member['groupterms']['main']['adminid'] = $member['adminid'];
+					}
+				}else{
+					$member['groupterms']['main'] = array('time' => $banexpirynew, 'adminid' => $member['adminid'], 'groupid' => $member['groupid']);
+				}
 				$member['groupterms']['ext'][$groupidnew] = $banexpirynew;
 				$setarr['groupexpiry'] = groupexpiry($member['groupterms']);
 			} else {
@@ -177,7 +188,7 @@ if($op == 'edit') {
 
 		if(!empty($_GET['expirationnew']) && is_array($_GET['expirationnew'])) {
 			foreach($_GET['expirationnew'] as $id => $expiration) {
-				if($expiration == intval($expiration)) {
+				if($expiration === intval($expiration)) {
 					$expiration = $expiration > 1 ? (TIMESTAMP + $expiration * 86400) : TIMESTAMP + 86400;
 					$updatecheck = C::t('common_banned')->update_expiration_by_id($id, $expiration, $_G['adminid'], $_G['username']);
 				}

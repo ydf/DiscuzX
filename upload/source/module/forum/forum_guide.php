@@ -13,7 +13,7 @@ if(!defined('IN_DISCUZ')) {
 
 $view = $_GET['view'];
 loadcache('forum_guide');
-if(!in_array($view, array('hot', 'digest', 'new', 'my', 'newthread', 'sofa'))) {
+if(!in_array($view, array('hot', 'digest', 'new', 'my', 'newthread', 'sofa', 'index'))) {
 	$view = 'hot';
 }
 $lang = lang('forum/template');
@@ -99,6 +99,7 @@ if($view != 'index') {
 			$searchbody = 1;
 		}
 		require_once libfile('function/forumlist');
+		$orderactives[$viewtype] = 'class="a"';		
 		$forumlist = forumselect(FALSE, 0, intval($_GET['fid']));
 		$data['my'] = get_my_threads($viewtype, $_GET['fid'], $filter, $searchkey, $start, $perpage, $theurl);
 		$tids = $data['my']['tids'];
@@ -167,16 +168,8 @@ function get_guide_list($view, $start = 0, $num = 50, $again = 0) {
 			return array();
 		}
 		if($view == 'sofa') {
-			if($_GET['fid']) {
-				$sofa = C::t('forum_sofa')->fetch_all_by_fid($_GET['fid'], $start, $num);
-			} else {
-				$sofa = C::t('forum_sofa')->range($start, $num);
-				foreach($sofa as $sofatid => $sofathread) {
-					if(!in_array($sofathread, $fids)) {
-						unset($sofathread[$sofatid]);
-					}
-				}
-			}
+			// 只从没有设置权限的板块获取数据，不在接收前端发来的板块 fid
+ 			$sofa = C::t('forum_sofa')->fetch_all_by_fid($fids, $start, $num);
 			$tids = array_keys($sofa);
 		}
 		$updatecache = true;
@@ -313,7 +306,7 @@ function get_my_threads($viewtype, $fid = 0, $filter = '', $searchkey = '', $sta
 		unset($pids, $tids, $postcommentarr);
 		if($fids) {
 			$fids = array_unique($fids);
-			$forumnames = C::t('forum_forum')->fetch_all_name_by_fid($gids);
+			$forumnames = C::t('forum_forum')->fetch_all_name_by_fid($fids);
 		}
 		$listcount = count($list);
 	} else {
@@ -335,6 +328,7 @@ function get_my_threads($viewtype, $fid = 0, $filter = '', $searchkey = '', $sta
 			$closed = 0;
 		}
 		require_once libfile('function/post');
+		$followfid = getglobal('setting/followforumid');		
 		$posts = C::t('forum_post')->fetch_all_by_authorid(0, $_G['uid'], true, 'DESC', $start, $perpage, null, $invisible, $fid, $followfid);
 		$listcount = count($posts);
 		foreach($posts as $pid => $post) {
@@ -415,6 +409,7 @@ function guide_procthread($thread) {
 	$thread['moved'] = $thread['heatlevel'] = $thread['new'] = 0;
 	$thread['icontid'] = $thread['forumstick'] || !$thread['moved'] && $thread['isgroup'] != 1 ? $thread['tid'] : $thread['closed'];
 	$thread['folder'] = 'common';
+	$thread['dbdateline'] = $thread['dateline'];	
 	$thread['weeknew'] = TIMESTAMP - 604800 <= $thread['dbdateline'];
 	if($thread['replies'] > $thread['views']) {
 		$thread['views'] = $thread['replies'];
@@ -428,7 +423,6 @@ function guide_procthread($thread) {
 		}
 	}
 	$thread['istoday'] = $thread['dateline'] > $todaytime ? 1 : 0;
-	$thread['dbdateline'] = $thread['dateline'];
 	$thread['dateline'] = dgmdate($thread['dateline'], 'u', '9999', getglobal('setting/dateformat'));
 	$thread['dblastpost'] = $thread['lastpost'];
 	$thread['lastpost'] = dgmdate($thread['lastpost'], 'u');
