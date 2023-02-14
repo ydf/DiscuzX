@@ -403,7 +403,7 @@ function pic_upload($FILES, $type='album', $thumb_width=0, $thumb_height=0, $thu
 		}
 	}
 
-	if(getglobal('setting/ftp/on')) {
+	if(ftpperm($upload->attach['ext'], $upload->attach['size'])) {
 		if(ftpcmd('upload', $type.'/'.$upload->attach['attachment'])) {
 			if($result['thumb']) {
 				ftpcmd('upload', $type.'/'.getimgthumbname($upload->attach['attachment']));
@@ -575,6 +575,15 @@ function getfollowfeed($uid, $viewtype, $archiver = false, $start = 0, $perpage 
 				}
 			}
 			$list['threads'] = C::t('forum_thread')->fetch_all_by_tid(C::t('home_follow_feed')->get_tids());
+			if (!empty($list['threads']) && is_array($list['threads'])) {
+				foreach ($list['threads'] as $key => $thread) {
+					if (empty($_G['setting']['followforumid']) || $thread['fid'] != $_G['setting']['followforumid']) {
+						if (!empty($list['content'][$key]['content'])) {
+							$list['content'][$key]['content'] = preg_replace('#onclick="changefeed\([^"]+\)"\s*style="cursor:\s*pointer;"#is', '', $list['content'][$key]['content']);
+						}
+					}
+				}
+			}
 		}
 	}
 	return $list;

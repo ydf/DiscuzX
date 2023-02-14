@@ -344,7 +344,7 @@ if($_GET['action'] == 'paysucceed') {
 
 	$message = '&nbsp;';
 	$savepost = C::t('forum_post')->fetch(0, $_GET['pid']);
-	if($savepost) {
+	if($savepost && $_G['uid'] == $savepost['authorid']) {
 		$message = $savepost['message'];
 		if($_GET['type']) {
 			require_once libfile('function/discuzcode');
@@ -412,7 +412,7 @@ if($_GET['action'] == 'paysucceed') {
 			}
 		}
 		if($_GET['ajaxdata'] === 'json') {
-			showmessage(array('dataexist' => $dataexist, 'cid' => $cid), '', $crimelist);
+			showmessage($dataexist.'|'.$cid, '', $crimelist);
 		} else {
 			include_once template("forum/darkroom");
 		}
@@ -1283,7 +1283,7 @@ if($_GET['action'] == 'votepoll' && submitcheck('pollsubmit', 1)) {
 			$query = C::t('forum_activityapply')->fetch_all($_GET['applyidarray']);
 			foreach($query as $row) {
 				if($row['tid'] == $_G['tid']) {
-					$tempusers[$row['uid']] = $row['verified'];
+					$tempusers[$row['uid']] = $row;
 				}
 			}
 			$query  = C::t('common_member')->fetch_all(array_keys($tempusers));
