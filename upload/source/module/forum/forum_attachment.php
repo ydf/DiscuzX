@@ -48,7 +48,7 @@ if($_G['setting']['attachexpire']) {
 
 	if(TIMESTAMP - $t > $_G['setting']['attachexpire'] * 3600) {
 		$aid = intval($aid);
-		if($attach = C::t('forum_attachment_n')->fetch($tableid, $aid)) {
+		if($attach = C::t('forum_attachment_n')->fetch_attachment($tableid, $aid)) {
 			if($attach['isimage']) {
 				dheader('location: '.$_G['siteurl'].'static/image/common/none.gif');
 			} else {
@@ -99,11 +99,11 @@ $archiveid = in_array($_GET['archiveid'], $threadtableids) ? intval($_GET['archi
 // 检查附件 aid 数据记录，取得附件和主题信息
 $attachexists = FALSE;
 if(!empty($aid) && is_numeric($aid)) {
-	$attach = C::t('forum_attachment_n')->fetch($tableid, $aid);
+	$attach = C::t('forum_attachment_n')->fetch_attachment($tableid, $aid);
 	$thread = C::t('forum_thread')->fetch_by_tid_displayorder($attach['tid'], 0, '>=', null, $archiveid);
 	if($_G['uid'] && $attach['uid'] != $_G['uid']) {
 		if($attach) {
-			$attachpost = C::t('forum_post')->fetch($thread['posttableid'], $attach['pid'], false);
+			$attachpost = C::t('forum_post')->fetch_post($thread['posttableid'], $attach['pid'], false);
 			$attach['invisible'] = $attachpost['invisible'];
 			unset($attachpost);
 		}
@@ -186,7 +186,7 @@ if(empty($_GET['nothumb']) && $attach['isimage'] && $attach['thumb']) {
 }
 
 $filename = $_G['setting']['attachdir'].'/forum/'.$attach['attachment'];
-if(!$attach['remote'] && !is_readable($filename)) {	
+if(!$attach['remote'] && !is_readable($filename)) {
 	if(!$requestmode) {
 		showmessage('attachment_nonexistence');
 	} else {
@@ -233,11 +233,11 @@ if(!$requestmode && !$has_range_header && empty($_GET['noupdate'])) {
 			attachment_updateviews($_G['forum_logfile']);
 		}
 
-		if(@$fp = fopen(DISCUZ_ROOT.$_G['forum_logfile'], 'a')) {
-			fwrite($fp, "$aid\n");
-			fclose($fp);
-		} elseif($_G['adminid'] == 1) {
-			showmessage('view_log_invalid', '', array('logfile' => $_G['forum_logfile']));
+		if(file_put_contents(DISCUZ_ROOT.$_G['forum_logfile'], "$aid\n", FILE_APPEND) === false) {
+			if($_G['adminid'] == 1) {
+				showmessage('view_log_invalid', '', array('logfile' => $_G['forum_logfile']));
+			}
+			C::t('forum_attachment')->update_download($aid);
 		}
 	} else {
 		C::t('forum_attachment')->update_download($aid);
@@ -364,7 +364,7 @@ function send_file_by_chunk($fp, $limit = PHP_INT_MAX) {
 		echo $buf;
 		flush();
 		ob_flush();
-		$count += sizeof($buf);
+		$count += strlen($buf);
 		if ($count >= $limit) break;
 	}
 }
@@ -393,18 +393,18 @@ function ext_to_mimetype($path) {
 	$ext = pathinfo($path, PATHINFO_EXTENSION);
 	$map = array(
 		'aac' => 'audio/aac',
-		'flac' => 'audio/flac', 
-		'mp3' => 'audio/mpeg', 
-		'm4a' => 'audio/mp4', 
-		'wav' => 'audio/wav', 
+		'flac' => 'audio/flac',
+		'mp3' => 'audio/mpeg',
+		'm4a' => 'audio/mp4',
+		'wav' => 'audio/wav',
 		'ogg' => 'audio/ogg',
 		'weba' => 'audio/webm',
-		'flv' => 'video/x-flv', 
-		'mp4' => 'video/mp4', 
-		'm4v' => 'video/mp4', 
+		'flv' => 'video/x-flv',
+		'mp4' => 'video/mp4',
+		'm4v' => 'video/mp4',
 		'3gp' => 'video/3gpp',
 		'ogv' => 'video/ogg',
-		'webm' => 'video/webm' 
+		'webm' => 'video/webm'
 	);
 	$mime = $map[$ext];
 	if (!$mime) $mime = "application/octet-stream";

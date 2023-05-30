@@ -16,7 +16,7 @@ if(!submitcheck('modsubmit') && !$_GET['fast']) {
 	require_once libfile('function/discuzcode');
 
 	shownav('topic', $lang['moderate_blogs']);
-	showsubmenu('nav_moderate_posts', $submenu);
+	showsubmenu('nav_moderate_blogs', $submenu);
 
 	$select[$_GET['tpp']] = $_GET['tpp'] ? "selected='selected'" : '';
 	$tpp_options = "<option value='20' $select[20]>20</option><option value='50' $select[50]>50</option><option value='100' $select[100]>100</option>";
@@ -36,25 +36,27 @@ if(!submitcheck('modsubmit') && !$_GET['fast']) {
 		$blog_status = 2;
 	}
 	showformheader("moderate&operation=blogs");
-	showtableheader('search');
+	showboxheader('search');
+	showtableheader();
 
-	showtablerow('', array('width="60"', 'width="160"', 'width="60"'),
+	showtablerow('', array('width="100"', 'width="200"', 'width="100"'),
 		array(
-			cplang('username'), "<input size=\"15\" name=\"username\" type=\"text\" value=\"$_GET[username]\" />",
-			cplang('moderate_title_keyword'), "<input size=\"15\" name=\"title\" type=\"text\" value=\"$_GET[title]\" />",
+			cplang('username'), "<input size=\"15\" name=\"username\" type=\"text\" value=\"{$_GET['username']}\" />",
+			cplang('moderate_title_keyword'), "<input size=\"15\" name=\"title\" type=\"text\" value=\"{$_GET['title']}\" />",
 		)
 	);
-	showtablerow('', array('width="60"', 'width="160"', 'width="60"'),
+	showtablerow('', array('width="100"', 'width="200"', 'width="100"'),
                 array(
-                        "$lang[perpage]",
-                        "<select name=\"tpp\">$tpp_options</select><label><input name=\"showcensor\" type=\"checkbox\" class=\"checkbox\" value=\"yes\" ".($showcensor ? ' checked="checked"' : '')."/> $lang[moderate_showcensor]</label>",
-                        "$lang[moderate_bound]",
+                        "{$lang['perpage']}",
+                        "<select name=\"tpp\">$tpp_options</select><label><input name=\"showcensor\" type=\"checkbox\" class=\"checkbox\" value=\"yes\" ".($showcensor ? ' checked="checked"' : '')."/> {$lang['moderate_showcensor']}</label>",
+                        "{$lang['moderate_bound']}",
                         "<select name=\"filter\">$filteroptions</select>
                         <select name=\"dateline\">$dateline_options</select>
-                        <input class=\"btn\" type=\"submit\" value=\"$lang[search]\" />"
+                        <input class=\"btn\" type=\"submit\" value=\"{$lang['search']}\" />"
                 )
         );
 	showtablefooter();
+	showboxfooter();
 
 	$pagetmp = $page;
 	$modcount = C::t('common_moderate')->count_by_search_for_blog($moderatestatus, $_GET['username'], (($dateline &&  $dateline != 'all') ? (TIMESTAMP - $dateline) : null), $_GET['title']);
@@ -66,7 +68,9 @@ if(!submitcheck('modsubmit') && !$_GET['fast']) {
 	$page = $pagetmp + 1;
 	$multipage = multi($modcount, $tpp, $page, ADMINSCRIPT."?action=moderate&operation=blogs&filter=$filter&modfid=$modfid&ppp=$tpp&showcensor=$showcensor&dateline=$dateline");
 
-	echo '<p class="margintop marginbot"><a href="javascript:;" onclick="expandall();">'.cplang('moderate_all_expand').'</a> <a href="javascript:;" onclick="foldall();">'.cplang('moderate_all_fold').'</a></p>';
+	showtableheader('', 'nobottom');
+	echo '<tr><td><p class="margintop marginbot"><a href="javascript:;" onclick="expandall();">'.cplang('moderate_all_expand').'</a> &nbsp;<a href="javascript:;" onclick="foldall();">'.cplang('moderate_all_fold').'</a></p></td></tr>';
+	showtablefooter();
 
 	showtableheader();
 	$censor = & discuz_censor::instance();
@@ -93,15 +97,15 @@ if(!submitcheck('modsubmit') && !$_GET['fast']) {
 			$blog_censor_text = '';
 		}
 		showtagheader('tbody', '', true, 'hover');
-		showtablerow("id=\"mod_$blog[blogid]_row1\"", array("id=\"mod_$blog[blogid]_row1_op\" rowspan=\"3\" class=\"rowform threadopt\" style=\"width:80px;\"", '', 'width="120"', 'width="120"', 'width="55"'), array(
-			"<ul class=\"nofloat\"><li><input class=\"radio\" type=\"radio\" name=\"moderate[$blog[blogid]]\" id=\"mod_$blog[blogid]_1\" value=\"validate\" onclick=\"mod_setbg($blog[blogid], 'validate');\"><label for=\"mod_$blog[blogid]_1\">$lang[validate]</label></li><li><input class=\"radio\" type=\"radio\" name=\"moderate[$blog[blogid]]\" id=\"mod_$blog[blogid]_2\" value=\"delete\" onclick=\"mod_setbg($blog[blogid], 'delete');\"><label for=\"mod_$blog[blogid]_2\">$lang[delete]</label></li><li><input class=\"radio\" type=\"radio\" name=\"moderate[$blog[blogid]]\" id=\"mod_$blog[blogid]_3\" value=\"ignore\" onclick=\"mod_setbg($blog[blogid], 'ignore');\"><label for=\"mod_$blog[blogid]_3\">$lang[ignore]</label></li></ul>",
-			"<h3><a href=\"javascript:;\" onclick=\"display_toggle('$blog[blogid]');\">$blog[subject]</a> $blog_censor_text</h3><p>$blog[postip]</p>",
-			$blog[classname],
-			"<p><a target=\"_blank\" href=\"".ADMINSCRIPT."?action=members&operation=search&uid=$blog[uid]&submit=yes\">$blog[username]</a></p> <p>$blog[dateline]</p>",
-			"<a href=\"home.php?mod=space&uid=$blog[uid]&do=blog&id=$blog[blogid]&modblogkey=$blog[modblogkey]\" target=\"_blank\">$lang[view]</a>&nbsp;<a href=\"home.php?mod=spacecp&ac=blog&blogid=$blog[blogid]&modblogkey=$blog[modblogkey]\" target=\"_blank\">$lang[edit]</a>",
+		showtablerow("id=\"mod_{$blog['blogid']}_row1\"", array("id=\"mod_{$blog['blogid']}_row1_op\" rowspan=\"3\" class=\"rowform threadopt\" style=\"width:80px;\"", '', 'width="120"', 'width="120"', 'width="55"'), array(
+			"<ul class=\"nofloat\"><li><input class=\"radio\" type=\"radio\" name=\"moderate[{$blog['blogid']}]\" id=\"mod_{$blog['blogid']}_1\" value=\"validate\" onclick=\"mod_setbg({$blog['blogid']}, 'validate');\"><label for=\"mod_{$blog['blogid']}_1\">{$lang['validate']}</label></li><li><input class=\"radio\" type=\"radio\" name=\"moderate[{$blog['blogid']}]\" id=\"mod_{$blog['blogid']}_2\" value=\"delete\" onclick=\"mod_setbg({$blog['blogid']}, 'delete');\"><label for=\"mod_{$blog['blogid']}_2\">{$lang['delete']}</label></li><li><input class=\"radio\" type=\"radio\" name=\"moderate[{$blog['blogid']}]\" id=\"mod_{$blog['blogid']}_3\" value=\"ignore\" onclick=\"mod_setbg({$blog['blogid']}, 'ignore');\"><label for=\"mod_{$blog['blogid']}_3\">{$lang['ignore']}</label></li></ul>",
+			"<h3><a href=\"javascript:;\" onclick=\"display_toggle('{$blog['blogid']}');\">{$blog['subject']}</a> $blog_censor_text</h3><p>{$blog['postip']}</p>",
+			$blog['classname'],
+			"<p><a target=\"_blank\" href=\"".ADMINSCRIPT."?action=members&operation=search&uid={$blog['uid']}&submit=yes\">{$blog['username']}</a></p> <p>{$blog['dateline']}</p>",
+			"<a href=\"home.php?mod=space&uid={$blog['uid']}&do=blog&id={$blog['blogid']}&modblogkey={$blog['modblogkey']}\" target=\"_blank\">{$lang['view']}</a>&nbsp;<a href=\"home.php?mod=spacecp&ac=blog&blogid={$blog['blogid']}&modblogkey={$blog['modblogkey']}\" target=\"_blank\">{$lang['edit']}</a>",
 		));
-		showtablerow("id=\"mod_$blog[blogid]_row2\"", 'colspan="4" style="padding: 10px; line-height: 180%;"', '<div style="overflow: auto; overflow-x: hidden; max-height:120px; height:auto !important; height:100px; word-break: break-all;">'.$blog['message'].'</div>');
-		showtablerow("id=\"mod_$blog[blogid]_row3\"", 'class="threadopt threadtitle" colspan="4"', "<a href=\"?action=moderate&operation=blogs&fast=1&blogid=$blog[blogid]&moderate[$blog[blogid]]=validate&page=$page&frame=no\" target=\"fasthandle\">$lang[validate]</a> | <a href=\"?action=moderate&operation=blogs&fast=1&blogid=$blog[blogid]&moderate[$blog[blogid]]=delete&page=$page&frame=no\" target=\"fasthandle\">$lang[delete]</a> | <a href=\"?action=moderate&operation=blogs&fast=1&blogid=$blog[blogid]&moderate[$blog[blogid]]=ignore&page=$page&frame=no\" target=\"fasthandle\">$lang[ignore]</a>");
+		showtablerow("id=\"mod_{$blog['blogid']}_row2\"", 'colspan="4" style="padding: 10px; line-height: 180%;"', '<div style="overflow: auto; overflow-x: hidden; max-height:120px; height:auto !important; height:100px; word-break: break-all;">'.$blog['message'].'</div>');
+		showtablerow("id=\"mod_{$blog['blogid']}_row3\"", 'class="threadopt threadtitle" colspan="4"', "<a href=\"?action=moderate&operation=blogs&fast=1&blogid={$blog['blogid']}&moderate[{$blog['blogid']}]=validate&page=$page&frame=no\" target=\"fasthandle\">{$lang['validate']}</a> | <a href=\"?action=moderate&operation=blogs&fast=1&blogid={$blog['blogid']}&moderate[{$blog['blogid']}]=delete&page=$page&frame=no\" target=\"fasthandle\">{$lang['delete']}</a> | <a href=\"?action=moderate&operation=blogs&fast=1&blogid={$blog['blogid']}&moderate[{$blog['blogid']}]=ignore&page=$page&frame=no\" target=\"fasthandle\">{$lang['ignore']}</a>");
 		showtagfooter('tbody');
 	}
 

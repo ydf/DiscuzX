@@ -13,7 +13,6 @@ if(!defined('IN_DISCUZ')) {
 
 $id = intval($_GET['id']);
 $uid = intval($_GET['u']);
-$appid = intval($_GET['app']);
 $acceptconfirm = false;
 if($_G['setting']['regstatus'] < 2) {
 	showmessage('not_open_invite', '', array(), array('return' => true));
@@ -29,7 +28,6 @@ if($_G['uid']) {
 		if(count($cookies) == 3) {
 			$uid = intval($cookies[0]);
 			$_GET['c'] = $cookies[1];
-			$appid = intval($cookies[2]);
 		} else {
 			$id = intval($cookies[0]);
 			$_GET['c'] = $cookies[1];
@@ -57,15 +55,14 @@ if($id) {
 		showmessage('invite_code_endtime_error', '', array(), array('return' => true));
 	}
 
-	$appid = $invite['appid'];
 	$uid = $invite['uid'];
 
-	$cookievar = "$id,$invite[code]";
+	$cookievar = "$id,{$invite['code']}";
 
 } elseif ($uid) {
 
 	$id = 0;
-	$invite_code = space_key($uid, $appid);
+	$invite_code = helper_invite::generate_key($uid);
 	if($_GET['c'] !== $invite_code) {
 		showmessage('invite_code_error', '', array(), array('return' => true));
 	}
@@ -75,7 +72,7 @@ if($id) {
 		showmessage('invite_code_error', '', array(), array('return' => true));
 	}
 
-	$cookievar = "$uid,$invite_code,$appid";
+	$cookievar = "$uid,$invite_code,0";
 
 } else {
 	showmessage('invite_code_error', '', array(), array('return' => true));
@@ -99,6 +96,17 @@ if($acceptconfirm) {
 		showmessage('you_have_friends', $jumpurl);
 	}
 
+	// 允许单个用户屏蔽所有人加 Ta 为好友
+	$fields = C::t('common_member_field_home')->fetch($uid);
+	if(!$fields['allowasfriend']) {
+		showmessage('is_blacklist');
+	}
+
+	require_once libfile('function/spacecp');
+	if(isblacklist($uid)) {
+		showmessage('is_blacklist');
+	}
+
 	friend_make($space['uid'], $space['username']);
 
 	if($id) {
@@ -106,7 +114,7 @@ if($acceptconfirm) {
 		notification_add($uid, 'friend', 'invite_friend', array('actor' => '<a href="home.php?mod=space&uid='.$_G['uid'].'" target="_blank">'.$_G['username'].'</a>'), 1);
 	}
 	space_merge($space, 'field_home');
-	if(!empty($space['privacy']['feed']['invite'])) {
+	if(is_array($space['privacy']) && !empty($space['privacy']['feed']['invite'])) {
 		require_once libfile('function/feed');
 		$tite_data = array('username' => '<a href="home.php?mod=space&uid='.$_G['uid'].'">'.$_G['username'].'</a>');
 		feed_add('friend', 'feed_invite', $tite_data, '', array(), '', array(), array(), '', '', '', 0, 0, '', $space['uid'], $space['username']);
@@ -122,7 +130,7 @@ if($acceptconfirm) {
 	}
 
 	include_once libfile('function/stat');
-	updatestat($appid ? 'appinvite' : 'invite');
+	updatestat('invite');
 
 	showmessage('invite_friend_ok', $jumpurl);
 

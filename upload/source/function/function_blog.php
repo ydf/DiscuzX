@@ -32,7 +32,7 @@ function blog_post($POST, $olds=array()) {
 		$_G['username'] = addslashes($olds['username']);
 	}
 
-	$POST['subject'] = getstr(trim($POST['subject']), 80);
+	$POST['subject'] = empty($_GET['subject']) ? '' : (dstrlen($_GET['subject']) > $_G['setting']['maxsubjectsize'] ? getstr($_GET['subject'], $_G['setting']['maxsubjectsize']) : $_GET['subject']);
 	$POST['subject'] = censor($POST['subject'], NULL, FALSE, FALSE);
 	if(strlen($POST['subject'])<1) $POST['subject'] = dgmdate($_G['timestamp'], 'Y-m-d');
 	$POST['friend'] = intval($POST['friend']);
@@ -64,6 +64,9 @@ function blog_post($POST, $olds=array()) {
 	$POST['tag'] = getstr($POST['tag'], 500);
 	$POST['tag'] = censor($POST['tag']);
 
+	if($POST['plaintext'] == true){
+		$POST['message'] = nl2br($POST['message']);
+	}
 	$POST['message'] = preg_replace("/\<div\>\<\/div\>/i", '', $POST['message']);
 	$POST['message'] = checkhtml($POST['message']);
 		$POST['message'] = getstr($POST['message'], 0, 0, 0, 0, 1);
@@ -147,7 +150,7 @@ function blog_post($POST, $olds=array()) {
 			$albumid = album_creat($albumarr);
 		} else {
 			$albumid = $POST['savealbumid'] < 0 ? 0 : intval($POST['savealbumid']);
-			$albuminfo = C::t('home_album')->fetch($albumid, $_G['uid']);
+			$albuminfo = C::t('home_album')->fetch_album($albumid, $_G['uid']);
 			if(empty($albuminfo)) {
 				$albumid = 0;
 			}
@@ -167,7 +170,7 @@ function blog_post($POST, $olds=array()) {
 		}
 		foreach ($uploads as $value) {
 			$picurl = pic_get($value['filepath'], 'album', $value['thumb'], $value['remote'], 0);
-			$message .= "<div class=\"uchome-message-pic\"><img src=\"$picurl\"><p>$value[title]</p></div>";
+			$message .= "<div class=\"uchome-message-pic\"><img src=\"$picurl\"><p>{$value['title']}</p></div>";
 		}
 	}
 

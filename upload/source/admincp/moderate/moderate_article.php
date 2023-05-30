@@ -14,7 +14,7 @@ if(!defined('IN_DISCUZ') || !defined('IN_ADMINCP')) {
 if(!submitcheck('modsubmit') && !$_GET['fast']) {
 
 	shownav('topic', $lang['moderate_articles']);
-	showsubmenu('nav_moderate_posts', $submenu);
+	showsubmenu('nav_moderate_articles', $submenu);
 
 	$select[$_GET['tpp']] = $_GET['tpp'] ? "selected='selected'" : '';
 	$tpp_options = "<option value='20' $select[20]>20</option><option value='50' $select[50]>50</option><option value='100' $select[100]>100</option>";
@@ -36,33 +36,35 @@ if(!submitcheck('modsubmit') && !$_GET['fast']) {
 		if($cat['catid'] == $_GET['catid']) {
 			$selected = 'selected="selected"';
 		}
-		$cat_select .= "<option value=\"$cat[catid]\" $selected>$cat[catname]</option>";
+		$cat_select .= "<option value=\"{$cat['catid']}\" $selected>{$cat['catname']}</option>";
 	}
 	$article_status = 1;
 	if($_GET['filter'] == 'ignore') {
 		$article_status = 2;
 	}
 	showformheader("moderate&operation=articles");
-	showtableheader('search');
+	showboxheader('search');
+	showtableheader();
 
-	showtablerow('', array('width="60"', 'width="160"', 'width="60"'),
+	showtablerow('', array('width="100"', 'width="200"', 'width="100"'),
 		array(
-			cplang('username'), "<input size=\"15\" name=\"username\" type=\"text\" value=\"$_GET[username]\" />",
+			cplang('username'), "<input size=\"15\" name=\"username\" type=\"text\" value=\"{$_GET['username']}\" />",
 			cplang('moderate_article_category'), "<select name=\"catid\">$cat_select</select>",
 		)
 	);
-	showtablerow('', array('width="60"', 'width="160"', 'width="60"'),
-                array(
-                        "$lang[perpage]",
-                        "<select name=\"tpp\">$tpp_options</select><label><input name=\"showcensor\" type=\"checkbox\" class=\"checkbox\" value=\"yes\" ".($showcensor ? ' checked="checked"' : '')."/> $lang[moderate_showcensor]</label>",
-                        "$lang[moderate_bound]",
-                        "<select name=\"filter\">$filteroptions</select>
-                        <select name=\"dateline\">$dateline_options</select>
-                        <input class=\"btn\" type=\"submit\" value=\"$lang[search]\" />"
-                )
-        );
+	showtablerow('', array('width="100"', 'width="200"', 'width="100"'),
+		array(
+			"{$lang['perpage']}",
+			"<select name=\"tpp\">$tpp_options</select><label><input name=\"showcensor\" type=\"checkbox\" class=\"checkbox\" value=\"yes\" ".($showcensor ? ' checked="checked"' : '')."/> {$lang['moderate_showcensor']}</label>",
+			"{$lang['moderate_bound']}",
+			"<select name=\"filter\">$filteroptions</select>
+			<select name=\"dateline\">$dateline_options</select>
+			<input class=\"btn\" type=\"submit\" value=\"{$lang['search']}\" />"
+		)
+	);
 
 	showtablefooter();
+	showboxfooter();
 
 	$pagetmp = $page;
 	$sqlwhere = "";
@@ -75,7 +77,9 @@ if(!submitcheck('modsubmit') && !$_GET['fast']) {
 	$page = $pagetmp + 1;
 	$multipage = multi($modcount, $tpp, $page, ADMINSCRIPT."?action=moderate&operation=articles&filter=$filter&catid={$_GET['catid']}&dateline={$_GET['dateline']}&username={$_GET['username']}&keyword={$_GET['keyword']}&tpp=$tpp&showcensor=$showcensor");
 
-	echo '<p class="margintop marginbot"><a href="javascript:;" onclick="expandall();">'.cplang('moderate_all_expand').'</a> <a href="javascript:;" onclick="foldall();">'.cplang('moderate_all_fold').'</a></p>';
+	showtableheader('', 'nobottom');
+	echo '<tr><td><p class="margintop marginbot"><a href="javascript:;" onclick="expandall();">'.cplang('moderate_all_expand').'</a> &nbsp;<a href="javascript:;" onclick="foldall();">'.cplang('moderate_all_fold').'</a></p></td></tr>';
+	showtablefooter();
 
 	showtableheader();
 	$censor = & discuz_censor::instance();
@@ -100,16 +104,16 @@ if(!submitcheck('modsubmit') && !$_GET['fast']) {
 			$article_censor_text = '';
 		}
 		showtagheader('tbody', '', true, 'hover');
-		showtablerow("id=\"mod_$article[aid]_row1\"", array("id=\"mod_$article[aid]_row1_op\" rowspan=\"3\" class=\"rowform threadopt\" style=\"width:80px;\"", '', 'width="120"', 'width="55"'), array(
-			"<ul class=\"nofloat\"><li><input class=\"radio\" type=\"radio\" name=\"moderate[$article[aid]]\" id=\"mod_$article[aid]_1\" value=\"validate\" onclick=\"mod_setbg($article[aid], 'validate');\"><label for=\"mod_$article[aid]_1\">$lang[validate]</label></li><li><input class=\"radio\" type=\"radio\" name=\"moderate[$article[aid]]\" id=\"mod_$article[aid]_2\" value=\"delete\" onclick=\"mod_setbg($article[aid], 'delete');\"><label for=\"mod_$article[aid]_2\">$lang[delete]</label></li><li><input class=\"radio\" type=\"radio\" name=\"moderate[$article[aid]]\" id=\"mod_$article[aid]_3\" value=\"ignore\" onclick=\"mod_setbg($article[aid], 'ignore');\"><label for=\"mod_$article[aid]_3\">$lang[ignore]</label></li></ul>",
-			"<h3><a href=\"javascript:;\" onclick=\"display_toggle({$article[aid]});\">$article[title] $article_censor_text</a></h3>",
-			"<p><a target=\"_blank\" href=\"".ADMINSCRIPT."?action=members&operation=search&uid=$article[uid]&submit=yes\">$article[username]</a></p> <p>$article[dateline]</p>",
-			"<a target=\"_blank\" href=\"portal.php?mod=view&aid=$article[aid]&modarticlekey=$article[modarticlekey]\">$lang[view]</a>&nbsp;<a href=\"portal.php?mod=portalcp&ac=article&op=edit&aid=$article[aid]&modarticlekey=$article[modarticlekey]\" target=\"_blank\">$lang[edit]</a>",
+		showtablerow("id=\"mod_{$article['aid']}_row1\"", array("id=\"mod_{$article['aid']}_row1_op\" rowspan=\"3\" class=\"rowform threadopt\" style=\"width:80px;\"", '', 'width="120"', 'width="55"'), array(
+			"<ul class=\"nofloat\"><li><input class=\"radio\" type=\"radio\" name=\"moderate[{$article['aid']}]\" id=\"mod_{$article['aid']}_1\" value=\"validate\" onclick=\"mod_setbg({$article['aid']}, 'validate');\"><label for=\"mod_{$article['aid']}_1\">{$lang['validate']}</label></li><li><input class=\"radio\" type=\"radio\" name=\"moderate[{$article['aid']}]\" id=\"mod_{$article['aid']}_2\" value=\"delete\" onclick=\"mod_setbg({$article['aid']}, 'delete');\"><label for=\"mod_{$article['aid']}_2\">{$lang['delete']}</label></li><li><input class=\"radio\" type=\"radio\" name=\"moderate[{$article['aid']}]\" id=\"mod_{$article['aid']}_3\" value=\"ignore\" onclick=\"mod_setbg({$article['aid']}, 'ignore');\"><label for=\"mod_{$article['aid']}_3\">{$lang['ignore']}</label></li></ul>",
+			"<h3><a href=\"javascript:;\" onclick=\"display_toggle({$article['aid']});\">{$article['title']} $article_censor_text</a></h3>",
+			"<p><a target=\"_blank\" href=\"".ADMINSCRIPT."?action=members&operation=search&uid={$article['uid']}&submit=yes\">{$article['username']}</a></p> <p>{$article['dateline']}</p>",
+			"<a target=\"_blank\" href=\"portal.php?mod=view&aid={$article['aid']}&modarticlekey={$article['modarticlekey']}\">{$lang['view']}</a>&nbsp;<a href=\"portal.php?mod=portalcp&ac=article&op=edit&aid={$article['aid']}&modarticlekey={$article['modarticlekey']}\" target=\"_blank\">{$lang['edit']}</a>",
 		));
 
-		showtablerow("id=\"mod_$article[aid]_row2\"", 'colspan="4" style="padding: 10px; line-height: 180%;"', '<div style="overflow: auto; overflow-x: hidden; max-height:120px; height:auto !important; height:100px; word-break: break-all;">'.$article['summary'].'</div>');
+		showtablerow("id=\"mod_{$article['aid']}_row2\"", 'colspan="4" style="padding: 10px; line-height: 180%;"', '<div style="overflow: auto; overflow-x: hidden; max-height:120px; height:auto !important; height:100px; word-break: break-all;">'.$article['summary'].'</div>');
 
-		showtablerow("id=\"mod_$article[aid]_row3\"", 'class="threadopt threadtitle" colspan="4"', "<a href=\"?action=moderate&operation=articles&fast=1&aid=$article[aid]&moderate[$article[aid]]=validate&page=$page&frame=no\" target=\"fasthandle\">$lang[validate]</a> | <a href=\"?action=moderate&operation=articles&fast=1&aid=$article[aid]&moderate[$article[aid]]=delete&page=$page&frame=no\" target=\"fasthandle\">$lang[delete]</a> | <a href=\"?action=moderate&operation=articles&fast=1&aid=$article[aid]&moderate[$article[aid]]=ignore&page=$page&frame=no\" target=\"fasthandle\">$lang[ignore]</a>");
+		showtablerow("id=\"mod_{$article['aid']}_row3\"", 'class="threadopt threadtitle" colspan="4"', "<a href=\"?action=moderate&operation=articles&fast=1&aid={$article['aid']}&moderate[{$article['aid']}]=validate&page=$page&frame=no\" target=\"fasthandle\">{$lang['validate']}</a> | <a href=\"?action=moderate&operation=articles&fast=1&aid={$article['aid']}&moderate[{$article['aid']}]=delete&page=$page&frame=no\" target=\"fasthandle\">{$lang['delete']}</a> | <a href=\"?action=moderate&operation=articles&fast=1&aid={$article['aid']}&moderate[{$article['aid']}]=ignore&page=$page&frame=no\" target=\"fasthandle\">{$lang['ignore']}</a>");
 		showtagfooter('tbody');
 	}
 

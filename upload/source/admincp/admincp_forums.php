@@ -37,8 +37,8 @@ var rowtypedata = [
 </script>
 <?php
 		showformheader('forums');
-		echo '<div style="height:30px;line-height:30px;"><a href="javascript:;" onclick="show_all()">'.cplang('show_all').'</a> | <a href="javascript:;" onclick="hide_all()">'.cplang('hide_all').'</a> <input type="text" id="srchforumipt" class="txt" /> <input type="submit" class="btn" value="'.cplang('search').'" onclick="return srchforum()" /></div>';
-		showtableheader('');
+		echo '<div style="padding: 0px 20px;background: #fff;height:60px;line-height:60px;"><a href="javascript:;" onclick="show_all()">'.cplang('show_all').'</a> | <a href="javascript:;" onclick="hide_all()">'.cplang('hide_all').'</a>&nbsp;&nbsp;&nbsp;<input type="text" id="srchforumipt" class="txt" /> <input type="submit" class="btn" value="'.cplang('search').'" onclick="return srchforum()" /></div>';
+		showtableheader();
 		showsubtitle(array('', 'display_order', 'forums_admin_name', '', 'forums_moderators', '<a href="javascript:;" onclick="if(getmultiids()) location.href=\''.ADMINSCRIPT.'?action=forums&operation=edit&multi=\' + getmultiids();return false;">'.$lang['multiedit'].'</a>'));
 
 		$forumcount = C::t('forum_forum')->fetch_forum_num();
@@ -57,7 +57,7 @@ var rowtypedata = [
 		}
 
 		foreach ($groups as $id => $gforum) {
-			$toggle = $forumcount > 50 && count($forums[$id]) > 2;
+			$toggle = $forumcount > 50 && isset($forums[$id]) && is_array($forums[$id]) && count($forums[$id]) > 2;
 			$showed[] = showforum($gforum, 'group', '', $toggle);
 			if(!empty($forums[$id])) {
 				foreach ($forums[$id] as $forum) {
@@ -231,9 +231,9 @@ var rowtypedata = [
 
 		foreach($moderators as $mod) {
 			showtablerow('', array('class="td25"', 'class="td28"'), array(
-				'<input type="checkbox" class="checkbox" name="delete[]" value="'.$mod[uid].'"'.($mod['inherited'] ? ' disabled' : '').' />',
-				'<input type="text" class="txt" name="displayordernew['.$mod[uid].']" value="'.$mod[displayorder].'" size="2" />',
-				"<a href=\"".ADMINSCRIPT."?mod=forum&action=members&operation=group&uid=$mod[uid]\" target=\"_blank\">{$users[$mod['uid']]['username']}</a>",
+				'<input type="checkbox" class="checkbox" name="delete[]" value="'.$mod['uid'].'"'.($mod['inherited'] ? ' disabled' : '').' />',
+				'<input type="text" class="txt" name="displayordernew['.$mod['uid'].']" value="'.$mod['displayorder'].'" size="2" />',
+				"<a href=\"".ADMINSCRIPT."?mod=forum&action=members&operation=group&uid={$mod['uid']}\" target=\"_blank\">{$users[$mod['uid']]['username']}</a>",
 				$modgroups[$users[$mod['uid']]['groupid']],
 				cplang($mod['inherited'] ? 'yes' : 'no'),
 			));
@@ -501,7 +501,7 @@ var rowtypedata = [
 			$fids = &$_GET['multi'];
 		}
 	}
-	if(count($_GET['multi']) == 1) {
+	if(!empty($_GET['multi']) && is_array($_GET['multi']) && count($_GET['multi']) == 1) {
 		$fids = $_GET['multi'][0];
 		$multiset = 0;
 	}
@@ -527,7 +527,7 @@ var rowtypedata = [
 	$allowthreadtypes = !in_array('threadtypes', $dactionarray);
 
 
-	$forumkeys = C::t('common_setting')->fetch('forumkeys', true);
+	$forumkeys = C::t('common_setting')->fetch_setting('forumkeys', true);
 
 	$rules = array();
 	foreach(C::t('common_credit_rule')->fetch_all_by_action(array('reply', 'post', 'digest', 'postattach', 'getattach')) as $value) {
@@ -546,16 +546,16 @@ var rowtypedata = [
 		$forumselect = '';
 		$sgid = 0;
 		foreach($_G['cache']['forums'] as $forums) {
-			$checked = $fid == $forums['fid'] || in_array($forums['fid'], $_GET['multi']);
+			$checked = $fid == $forums['fid'] || (is_array($_GET['multi']) && in_array($ggroup['groupid'], $_GET['multi']));
 			if($forums['type'] == 'group') {
 				$sgid = $forums['fid'];
 				$forumselect .= '</div><em class="cl">'.
 					'<span class="right"><input name="checkall_'.$forums['fid'].'" onclick="checkAll(\'value\', this.form, '.$forums['fid'].', \'checkall_'.$forums['fid'].'\')" type="checkbox" class="vmiddle checkbox" /></span>'.
-					'<span class="pointer" onclick="sdisplay(\'g_'.$forums['fid'].'\', this)"><img src="static/image/admincp/desc.gif" class="vmiddle" /></span> <span class="pointer" onclick="location.href=\''.ADMINSCRIPT.'?action=forums&operation=edit&switch=yes&fid='.$forums['fid'].'\'">'.$forums['name'].'</span></em><div id="g_'.$forums['fid'].'" style="display:">';
+					'<span class="pointer" onclick="sdisplay(\'g_'.$forums['fid'].'\', this)"><img src="' . STATICURL . 'image/admincp/desc.gif" class="vmiddle" /></span> <span class="pointer" onclick="location.href=\''.ADMINSCRIPT.'?action=forums&operation=edit&switch=yes&fid='.$forums['fid'].'\'">'.$forums['name'].'</span></em><div id="g_'.$forums['fid'].'" style="display:">';
 			} elseif($forums['type'] == 'forum') {
-				$forumselect .= '<input class="left checkbox ck" chkvalue="'.$sgid.'" name="multi[]" value="'.$forums['fid'].'" type="checkbox" '.($checked ? 'checked="checked" ' : '').'/><a class="f'.($checked ? ' current"' : '').'" href="###" onclick="location.href=\''.ADMINSCRIPT.'?action=forums&operation=edit&switch=yes&fid='.$forums['fid'].($mforum[0]['type'] != 'group' ? '&anchor=\'+currentAnchor' : '\'').'+\'&scrolltop=\'+scrollTopBody()">'.$forums['name'].'</a>';
+				$forumselect .= '<input class="left checkbox ck" chkvalue="'.$sgid.'" name="multi[]" value="'.$forums['fid'].'" type="checkbox" '.($checked ? 'checked="checked" ' : '').'/><a class="f cl'.($checked ? ' current"' : '').'" href="###" onclick="location.href=\''.ADMINSCRIPT.'?action=forums&operation=edit&switch=yes&fid='.$forums['fid'].($mforum[0]['type'] != 'group' ? '&anchor=\'+currentAnchor' : '\'').'+\'&scrolltop=\'+scrollTopBody()">'.$forums['name'].'</a>';
 			} elseif($forums['type'] == 'sub') {
-				$forumselect .= '<input class="left checkbox ck" chkvalue="'.$sgid.'" name="multi[]" value="'.$forums['fid'].'" type="checkbox" '.($checked ? 'checked="checked" ' : '').'/><a class="s'.($checked ? ' current"' : '').'" href="###" onclick="location.href=\''.ADMINSCRIPT.'?action=forums&operation=edit&switch=yes&fid='.$forums['fid'].($mforum[0]['type'] != 'group' ? '&anchor=\'+currentAnchor' : '\'').'+\'&scrolltop=\'+scrollTopBody()">'.$forums['name'].'</a>';
+				$forumselect .= '<input class="left checkbox ck" chkvalue="'.$sgid.'" name="multi[]" value="'.$forums['fid'].'" type="checkbox" '.($checked ? 'checked="checked" ' : '').'/><a class="s cl'.($checked ? ' current"' : '').'" href="###" onclick="location.href=\''.ADMINSCRIPT.'?action=forums&operation=edit&switch=yes&fid='.$forums['fid'].($mforum[0]['type'] != 'group' ? '&anchor=\'+currentAnchor' : '\'').'+\'&scrolltop=\'+scrollTopBody()">'.$forums['name'].'</a>';
 			}
 		}
 		$forumselect = '<span id="fselect" class="right popupmenu_dropmenu" onmouseover="showMenu({\'ctrlid\':this.id,\'pos\':\'34\'});$(\'fselect_menu\').style.top=(parseInt($(\'fselect_menu\').style.top)-scrollTopBody())+\'px\';$(\'fselect_menu\').style.left=(parseInt($(\'fselect_menu\').style.left)-document.documentElement.scrollLeft-20)+\'px\'">'.cplang('forums_edit_switch').'<em>&nbsp;&nbsp;</em></span>'.
@@ -593,11 +593,11 @@ var rowtypedata = [
 			$groups[$group['type']][] = $group;
 		}
 
-		$styleselect = "<select name=\"styleidnew\"><option value=\"0\">$lang[use_default]</option>";
+		$styleselect = "<select name=\"styleidnew\"><option value=\"0\">{$lang['use_default']}</option>";
 		foreach(C::t('common_style')->fetch_all_data(false, false) as $style) {
-			$styleselect .= "<option value=\"$style[styleid]\" ".
+			$styleselect .= "<option value=\"{$style['styleid']}\" ".
 				($style['styleid'] == $mforum[0]['styleid'] ? 'selected="selected"' : NULL).
-				">$style[name]</option>\n";
+				">{$style['name']}</option>\n";
 		}
 		$styleselect .= '</select>';
 
@@ -606,9 +606,9 @@ var rowtypedata = [
 			foreach(C::t('forum_attachtype')->fetch_all_by_fid($fid) as $type) {
 				$type['maxsize'] = round($type['maxsize'] / 1024);
 				$attachtypes .= showtablerow('', array('class="td25"', 'class="td24"'), array(
-					"<input class=\"checkbox\" type=\"checkbox\" name=\"delete[]\" value=\"$type[id]\" />",
-					"<input type=\"text\" class=\"txt\" size=\"10\" name=\"extension[$type[id]]\" value=\"$type[extension]\" />",
-					"<input type=\"text\" class=\"txt\" size=\"15\" name=\"maxsize[$type[id]]\" value=\"$type[maxsize]\" />"
+					"<input class=\"checkbox\" type=\"checkbox\" name=\"delete[]\" value=\"{$type['id']}\" />",
+					"<input type=\"text\" class=\"txt\" size=\"10\" name=\"extension[{$type['id']}]\" value=\"{$type['extension']}\" />",
+					"<input type=\"text\" class=\"txt\" size=\"15\" name=\"maxsize[{$type['id']}]\" value=\"{$type['maxsize']}\" />"
 				), TRUE);
 			}
 		} else {
@@ -668,11 +668,11 @@ var rowtypedata = [
 						foreach($fups as $forum1) {
 							if($forum1['type'] == 'group') {
 								$selected = $forum1['fid'] == $forum['fup'] ? "selected=\"selected\"" : NULL;
-								$fupselect .= "<option value=\"$forum1[fid]\" $selected>$forum1[name]</option>\n";
+								$fupselect .= "<option value=\"{$forum1['fid']}\" $selected>{$forum1['name']}</option>\n";
 								foreach($fups as $forum2) {
 									if($forum2['type'] == 'forum' && $forum2['fup'] == $forum1['fid']) {
 										$selected = $forum2['fid'] == $forum['fup'] ? "selected=\"selected\"" : NULL;
-										$fupselect .= "<option value=\"$forum2[fid]\" $selected>&nbsp; &gt; $forum2[name]</option>\n";
+										$fupselect .= "<option value=\"{$forum2['fid']}\" $selected>&nbsp; &gt; {$forum2['name']}</option>\n";
 									}
 								}
 							}
@@ -680,7 +680,7 @@ var rowtypedata = [
 						foreach($fups as $forum0) {
 							if($forum0['type'] == 'forum' && $forum0['fup'] == 0) {
 								$selected = $forum0['fid'] == $forum['fup'] ? "selected=\"selected\"" : NULL;
-								$fupselect .= "<option value=\"$forum0[fid]\" $selected>$forum0[name]</option>\n";
+								$fupselect .= "<option value=\"{$forum0['fid']}\" $selected>{$forum0['name']}</option>\n";
 							}
 						}
 					}
@@ -725,8 +725,8 @@ var rowtypedata = [
 								'<input type="checkbox" name="threadsortsnew[options][enable]['.$type['typeid'].']" value="1" class="checkbox"'.$enablechecked.' />',
 								$type['name'],
 								$type['description'],
-								"<input class=\"checkbox\" type=\"checkbox\" name=\"threadsortsnew[options][show][{$type[typeid]}]\" value=\"3\" $typeselected[3] />",
-								"<input class=\"radio\" type=\"radio\" name=\"threadsortsnew[defaultshow]\" value=\"$type[typeid]\" ".($forum['threadsorts']['defaultshow'] == $type['typeid'] ? 'checked' : '')." />"
+								"<input class=\"checkbox\" type=\"checkbox\" name=\"threadsortsnew[options][show][{$type['typeid']}]\" value=\"3\" $typeselected[3] />",
+								"<input class=\"radio\" type=\"radio\" name=\"threadsortsnew[defaultshow]\" value=\"{$type['typeid']}\" ".($forum['threadsorts']['defaultshow'] == $type['typeid'] ? 'checked' : '')." />"
 							), TRUE) : '';
 						}
 					}
@@ -748,13 +748,14 @@ var rowtypedata = [
 				$forum['subforumsindex'] = bindec(substr($simplebin, 3, 2));
 				$forum['subforumsindex'] = $forum['subforumsindex'] == 0 ? -1 : ($forum['subforumsindex'] == 2 ? 0 : 1);
 				$forum['simple'] = $forum['simple'] & 1;
-				$forum['modrecommend'] = $forum['modrecommend'] ? dunserialize($forum['modrecommend']) : '';
+				$forum['modrecommend'] = $forum['modrecommend'] ? dunserialize($forum['modrecommend']) : array();
 				$forum['formulaperm'] = dunserialize($forum['formulaperm']);
 				$forum['medal'] = $forum['formulaperm']['medal'];
 				$forum['formulapermmessage'] = $forum['formulaperm']['message'];
 				$forum['formulapermusers'] = $forum['formulaperm']['users'];
 				$forum['formulaperm'] = $forum['formulaperm'][0];
 				$forum['extra'] = dunserialize($forum['extra']);
+				$forum['threadsorts'] = is_array($forum['threadsorts']) ? $forum['threadsorts'] : array();
 				$forum['threadsorts']['default'] = $forum['threadsorts']['defaultshow'] ? 1 : 0;
 
 				$_G['multisetting'] = $multiset ? 1 : 0;
@@ -764,7 +765,7 @@ var rowtypedata = [
 				if(!$multiset) {
 					showtips('forums_edit_tips');
 				}
-				showtableheader('forums_edit_basic', 'nobottom');
+				showtableheader('forums_edit_basic');
 				showsetting('forums_edit_basic_name', 'namenew', $forum['name'], 'text');
 				showsetting('forums_edit_base_name_color', 'extranew[namecolor]', $forum['extra']['namecolor'], 'color');
 				if(!$multiset) {
@@ -800,7 +801,7 @@ var rowtypedata = [
 				showsetting('forums_edit_basic_rules', 'rulesnew', htmlspecialchars_decode(html2bbcode($forum['rules'])), 'textarea');
 				showsetting('forums_edit_basic_keys', 'keysnew', $forumkeys[$fid], 'text');
 				if(!empty($_G['setting']['domain']['root']['forum'])) {
-					$iname = $multiset ? "multinew[{$_G[showsetting_multi]}][domainnew]" : 'domainnew';
+					$iname = $multiset ? "multinew[{$_G['showsetting_multi']}][domainnew]" : 'domainnew';
 					showsetting('forums_edit_extend_domain', '', '', $_G['scheme'].'://<input type="text" name="'.$iname.'" class="txt" value="'.$forum['domain'].'" style="width:100px; margin-right:0px;" >.'.$_G['setting']['domain']['root']['forum']);
 				} elseif(!$multiset) {
 					showsetting('forums_edit_extend_domain', 'domainnew', '', 'text', 'disabled');
@@ -963,7 +964,7 @@ var rowtypedata = [
 					/*search={"forums_admin":"action=forums","forums_edit_attachtype":"action=forums&operation=edit&anchor=attachtype"}*/
 					showtagheader('div', 'attachtype', $anchor == 'attachtype');
 					showtips('forums_edit_attachtype_tips');
-					showtableheader();
+					showtableheader('', 'nobottom');
 					showtablerow('class="partition"', array('class="td25"', 'class="td24"'), array(cplang('del'), cplang('misc_attachtype_ext'), cplang('misc_attachtype_maxsize')));
 					echo $attachtypes;
 					echo '<tr><td></td><td colspan="2"><div><a href="###" onclick="addrow(this, 1)" class="addtr">'.$lang['misc_attachtype_add'].'</a></div></tr>';
@@ -976,7 +977,7 @@ var rowtypedata = [
 					if(!$multiset) {
 						showtips('forums_edit_tips');
 					}
-					showtableheader('forums_edit_credits_policy', 'fixpadding');
+					showtableheader('forums_edit_credits_policy', 'fixpadding nobottom');
 					echo '<tr class="header"><th>'.cplang('credits_id').'</th><th>'.cplang('setting_credits_policy_cycletype').'</th><th>'.cplang('setting_credits_policy_rewardnum').'</th><th class="td25">'.cplang('custom').'</th>';
 					foreach($_G['setting']['extcredits'] as $i => $extcredit) {
 						echo '<th>'.$extcredit['title'].'</th>';
@@ -1161,7 +1162,7 @@ EOT;
 							}
 							$colums = array('<input class="checkbox" title="'.cplang('select_all').'" type="checkbox" name="chkallv'.$group['groupid'].'" onclick="checkAll(\'value\', this.form, '.$group['groupid'].', \'chkallv'.$group['groupid'].'\')" id="chkallv_'.$group['groupid'].'" /><label for="chkallv_'.$group['groupid'].'"> '.$group['grouptitle'].'</label>');
 							foreach($perms as $perm) {
-								$checked = strstr($forum[$perm], "\t$group[groupid]\t") ? 'checked="checked"' : NULL;
+								$checked = strstr($forum[$perm], "\t{$group['groupid']}\t") ? 'checked="checked"' : NULL;
 								$colums[] = '<input class="checkbox" type="checkbox" name="'.$perm.'[]" value="'.$group['groupid'].'" chkvalue="'.$group['groupid'].'" '.$checked.'>';
 							}
 							showtablerow('', array('width="21%"', 'width="13%"', 'width="13%"', 'width="13%"', 'width="16%"', 'width="13%"', 'width="13%"'), $colums);
@@ -1306,6 +1307,7 @@ EOT;
 			}}
 
 		if($_G['showsetting_multicount'] > 1) {
+			$mfids = is_array($mfids) ? $mfids : array($mfids);
 			showhiddenfields(array('multi' => implode(',', $mfids)));
 			showmulti();
 		}
@@ -1470,7 +1472,7 @@ EOT;
 
 				$fup = C::t('forum_forum')->fetch($_GET['fupnew']);
 
-				$fupadd = ", type='".($fup['type'] == 'forum' ? 'sub' : 'forum')."', fup='$fup[fid]'";
+				$fupadd = ", type='".($fup['type'] == 'forum' ? 'sub' : 'forum')."', fup='{$fup['fid']}'";
 				$forumdata['type'] = $fup['type'] == 'forum' ? 'sub' : 'forum';
 				$forumdata['fup'] = $fup['fid'];
 				C::t('forum_moderator')->delete_by_fid_inherited($fid, 1);
@@ -1539,7 +1541,7 @@ EOT;
 				'allowglobalstick' => $allowglobalsticknew,
 				'disablethumb' => $_GET['disablethumbnew'],
 				'disablewatermark' => $_GET['disablewatermarknew'],
-				'autoclose' => intval($_GET['autoclosenew'] * $_GET['autoclosetimenew']),
+				'autoclose' => (!empty($_GET['autoclosenew']) && !empty($_GET['autoclosetimenew'])) ? (intval((int)$_GET['autoclosenew'] * (int)$_GET['autoclosetimenew'])) : 0,
 				'allowfeed' => $_GET['allowfeednew'],
 				'domain' => $domain,
 			));
@@ -1824,7 +1826,7 @@ EOT;
 					'postattachperm' => $_GET['postattachpermnew'],
 					'postimageperm' => $_GET['postimagepermnew'],
 					'relatedgroup' => $_GET['relatedgroupnew'],
-					'spviewperm' => implode("\t", $_GET['spviewpermnew']),
+					'spviewperm' => implode("\t", is_array($_GET['spviewpermnew']) ? $_GET['spviewpermnew'] : array()),
 					'replybg' => $replybgnew
 				));
 			}
@@ -1844,7 +1846,7 @@ EOT;
 
 			if($forumkeys[$fid] != $_GET['keysnew'] && preg_match('/^\w*$/', $_GET['keysnew']) && !preg_match('/^\d+$/', $_GET['keysnew'])) {
 				$forumkeys[$fid] = $_GET['keysnew'];
-				C::t('common_setting')->update('forumkeys', $forumkeys);
+				C::t('common_setting')->update_setting('forumkeys', $forumkeys);
 			}
 
 		}
@@ -2019,7 +2021,7 @@ EOT;
 	} else {
 
 		$fids = array();
-		if(is_array($_GET['target']) && count($_GET['target'])) {
+		if(!empty($_GET['target']) && is_array($_GET['target']) && count($_GET['target'])) {
 			foreach($_GET['target'] as $fid) {
 				if(($fid = intval($fid)) && $fid != $source ) {
 					$fids[] = $fid;
@@ -2106,7 +2108,7 @@ function showforum(&$forum, $type = '', $last = '', $toggle = false) {
 			'</div>'.$boardattr.
 			'</td><td align="right" class="td23 lightfont">('.($type == 'group' ? 'gid:' : 'fid:').$forum['fid'].')</td>'.
 			'</td><td class="td23">'.showforum_moderators($forum).'</td>
-			<td width="160"><input class="checkbox" value="'.$forum['fid'].'" type="checkbox"'.($type != 'group' ? ' chkvalue="g'.$_G['fg'].'" onclick="multiupdate(this, '.$forum['fid'].')"' : ' name="gc'.$_G['fg'].'" onclick="checkAll(\'value\', this.form, \'g'.$_G['fg'].'\', \'gc'.$_G['fg'].'\', 1)"').' />'.'
+			<td width="180"><input class="checkbox" value="'.$forum['fid'].'" type="checkbox"'.($type != 'group' ? ' chkvalue="g'.$_G['fg'].'" onclick="multiupdate(this, '.$forum['fid'].')"' : ' name="gc'.$_G['fg'].'" onclick="checkAll(\'value\', this.form, \'g'.$_G['fg'].'\', \'gc'.$_G['fg'].'\', 1)"').' />'.'
 			<a href="'.ADMINSCRIPT.'?action=forums&operation=edit&fid='.$forum['fid'].'" title="'.cplang('forums_edit_comment').'" class="act">'.cplang('edit').'</a>'.
 			($type != 'group' ? '<a href="'.ADMINSCRIPT.'?action=forums&operation=copy&source='.$forum['fid'].'" title="'.cplang('forums_copy_comment').'" class="act">'.cplang('forums_copy').'</a>' : '').
 			'<a href="'.ADMINSCRIPT.'?action=forums&operation=delete&fid='.$forum['fid'].'&formhash='.FORMHASH.'" title="'.cplang('forums_delete_comment').'" class="act">'.cplang('delete').'</a></td></tr>';

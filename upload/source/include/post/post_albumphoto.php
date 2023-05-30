@@ -18,7 +18,7 @@ $aid = intval($_GET['aid']);
 $photolist = array();
 $query = C::t('home_album')->fetch_all_by_uid($_G['uid'], false, 0, 0, $aid);
 $count = $query[0]['picnum'];
-$albuminfo = C::t('home_album')->fetch($aid, $_G['uid']);
+$albuminfo = C::t('home_album')->fetch_album($aid, $_G['uid']);
 if(empty($albuminfo)) {
 	showmessage('to_view_the_photo_does_not_exist');
 }

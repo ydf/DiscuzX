@@ -9,14 +9,6 @@
 
 !defined('IN_UC') && exit('Access Denied');
 
-if(!function_exists('file_put_contents')) {
-	function file_put_contents($filename, $s) {
-		$fp = @fopen($filename, 'w');
-		@fwrite($fp, $s);
-		@fclose($fp);
-	}
-}
-
 class cachemodel {
 
 	var $db;
@@ -33,7 +25,7 @@ class cachemodel {
 		$this->map = array(
 			'settings' => array('settings'),
 			'badwords' => array('badwords'),
-			'apps' => array('apps')
+			'apps' => array('apps'),
 		);
 	}
 
@@ -46,7 +38,7 @@ class cachemodel {
 					$s .= '$_CACHE[\''.$m.'\'] = '.var_export($this->$method(), TRUE).";\r\n";
 				}
 				$s .= "\r\n?>";
-				@file_put_contents(UC_DATADIR."./cache/$cachefile.php", $s);
+				file_put_contents(UC_DATADIR."./cache/$cachefile.php", $s, LOCK_EX);
 			}
 		} else {
 			foreach((array)$this->map as $file => $modules) {
@@ -56,7 +48,7 @@ class cachemodel {
 					$s .= '$_CACHE[\''.$m.'\'] = '.var_export($this->$method(), TRUE).";\r\n";
 				}
 				$s .= "\r\n?>";
-				@file_put_contents(UC_DATADIR."./cache/$file.php", $s);
+				file_put_contents(UC_DATADIR."./cache/$file.php", $s, LOCK_EX);
 			}
 		}
 	}
@@ -83,7 +75,9 @@ class cachemodel {
 		$apps2 = array();
 		if(is_array($apps)) {
 			foreach($apps as $v) {
-				$v['extra'] = unserialize($v['extra']);
+				if(!empty($v['extra'])) {
+					$v['extra'] = is_array($v['extra']) ? $v['extra'] : unserialize($v['extra']);
+				}
 				$apps2[$v['appid']] = $v;
 			}
 		}

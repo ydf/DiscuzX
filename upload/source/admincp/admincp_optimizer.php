@@ -17,7 +17,6 @@ $optimizer_option = array(
 	'optimizer_thread',
 	'optimizer_setting',
 	'optimizer_post',
-	'optimizer_member',
 	'optimizer_dbbackup',
 	'optimizer_dbbackup_clean',
 	'optimizer_seo'
@@ -89,12 +88,6 @@ if($operation) {
 }
 
 $_GET['anchor'] = in_array($_GET['anchor'], array('security', 'serversec', 'performance')) ? $_GET['anchor'] : 'security';
-$current = array($_GET['anchor'] => 1);
-showmenu('nav_founder_optimizer', array(
-	array('founder_optimizer_security', 'optimizer&anchor=security', $current['security']),
-	array('founder_optimizer_serversec', 'optimizer&anchor=serversec', $current['serversec']),
-	array('founder_optimizer_performance', 'optimizer&anchor=performance', $current['performance']),
-));
 
 if($operation == 'optimize_unit') {
 
@@ -104,8 +97,8 @@ if($operation == 'optimize_unit') {
 
 	$checkstatus = $optimizer->check();
 
-	C::t('common_optimizer')->update($type.'_checkrecord', ($checkstatus['status'] == 1 ? $checkstatus['status'] : 0));
-	C::t('common_optimizer')->update($check_record_time_key, $_G['timestamp']);
+	C::t('common_optimizer')->update_optimizer($type.'_checkrecord', ($checkstatus['status'] == 1 ? $checkstatus['status'] : 0));
+	C::t('common_optimizer')->update_optimizer($check_record_time_key, $_G['timestamp']);
 
 	include template('common/header_ajax');
 	echo '<script type="text/javascript">updatecheckstatus(\''.$type.'\', \''.$checkstatus['lang'].'\', \''.$checkstatus['status'].'\', \''.$checkstatus['type'].'\', \''.$checkstatus['extraurl'].'\');</script>';
@@ -152,24 +145,24 @@ if($operation == 'optimize_unit') {
 
 } else {
 
-	$checkrecordtime = C::t('common_optimizer')->fetch($check_record_time_key);
+	$checkrecordtime = C::t('common_optimizer')->fetch_optimizer($check_record_time_key);
 
 	if(!$_GET['checking']) {
 		showtips('optimizer_'.$_GET['anchor'].'_tips');
 	}
 
-	showtableheader();
+	showboxheader();
 
-	echo '<div class="optblock cl">';
-	echo $_GET['checking'] ? '<a href="javascript:;" id="checking" class="btn_big">'.$lang['founder_optimizer_checking'].'</a>' :
-		'<a href="'.ADMINSCRIPT.'?action=optimizer&checking=1&anchor='.$_GET['anchor'].'" id="checking" class="btn_big">'.$lang['founder_optimizer_start_check'].'</a>';
+	echo '<div class="drow" style="margin-bottom: 0px;"><div class="dcol">';
+	echo $_GET['checking'] ? '<a href="javascript:;" id="checking" class="btn_big">'.$lang['founder_optimizer_checking'].'</a></div>' :
+		'<a href="'.ADMINSCRIPT.'?action=optimizer&checking=1&anchor='.$_GET['anchor'].'" id="checking" class="btn_big">'.$lang['founder_optimizer_start_check'].'</a></div>';
 	if($_GET['checking']) {
-		echo '<div class="pbg" id="processid">';
+		echo '<div class="dcol"><div class="pbg" id="processid">';
 		echo '<div class="pbr" style="width: 0;" id="percentprocess"></div>';
 		echo '<div class="xs0" id="percent">0%</div>';
-		echo '</div>';
+		echo '</div></div>';
 	}
-	echo '<div id="checkstatus">';
+	echo '<div id="checkstatus" class="dcol">';
 	if(!$checkrecordtime) {
 		echo $lang['founder_optimizer_first_use'];
 	} else {
@@ -216,7 +209,7 @@ if($operation == 'optimize_unit') {
 					var tip_tablerows = tip_table.rows.length;
 
 					if(id == 'optimizer_upgrade' || id == 'optimizer_patch') {
-						securitygrade = '{$lang[founder_optimizer_low]}';
+						securitygrade = '{$lang['founder_optimizer_low']}';
 					}
 
 					var optiontype = id;
@@ -250,11 +243,11 @@ if($operation == 'optimize_unit') {
 					var statusstr = '';
 					if(status != 0) {
 						if(type == 'header') {
-							statusstr = '<a class="btn" href="$adminscipt?action=optimizer&operation=optimize_unit&anchor=$_GET[anchor]&type='+ optiontype + extraurl + '" target="_blank">{$lang[founder_optimizer_optimizer]}</a>';
+							statusstr = '<a class="btn" href="$adminscipt?action=optimizer&operation=optimize_unit&anchor={$_GET['anchor']}&type='+ optiontype + extraurl + '" target="_blank">{$lang['founder_optimizer_optimizer']}</a>';
 						} else if(type == 'view') {
-							statusstr = '<a class="btn" href="$adminscipt?action=optimizer&operation=optimize_unit&anchor=$_GET[anchor]&type='+ optiontype + extraurl + '" target="_blank">{$lang[founder_optimizer_view]}</a>';
+							statusstr = '<a class="btn" href="$adminscipt?action=optimizer&operation=optimize_unit&anchor={$_GET['anchor']}&type='+ optiontype + extraurl + '" target="_blank">{$lang['founder_optimizer_view']}</a>';
 						} else if(type == 'scan') {
-							statusstr = '<a class="btn" href="$adminscipt?action=optimizer&operation=optimize_unit&anchor=$_GET[anchor]&type='+ optiontype + extraurl + '" target="_blank">{$lang[founder_optimizer_scan]}</a>';
+							statusstr = '<a class="btn" href="$adminscipt?action=optimizer&operation=optimize_unit&anchor={$_GET['anchor']}&type='+ optiontype + extraurl + '" target="_blank">{$lang['founder_optimizer_scan']}</a>';
 						}
 					}
 					newtr.insertCell(0).innerHTML = $(id + '_unit').innerHTML;
@@ -262,22 +255,22 @@ if($operation == 'optimize_unit') {
 					newtr.insertCell(2).innerHTML = statusstr;
 
 					if(parseInt(checkpercent) >= 100) {
-						$('checking').innerHTML = '{$lang[founder_optimizer_recheck_js]}';
-						$('checking').href = '{$adminscipt}?action=optimizer&checking=1&anchor={$_GET[anchor]}';
+						$('checking').innerHTML = '{$lang['founder_optimizer_recheck_js']}';
+						$('checking').href = '{$adminscipt}?action=optimizer&checking=1&anchor={$_GET['anchor']}';
 						$('processid').style.display = 'none';
-						if('$_GET[anchor]' == 'security') {
+						if('{$_GET['anchor']}' == 'security') {
 							if(securitygrade == '') {
 								if(optimize_num <= 1) {
-									securitygrade = '{$lang[founder_optimizer_high]}';
+									securitygrade = '{$lang['founder_optimizer_high']}';
 								} else if(optimize_num >=2 && optimize_num <=4) {
-									securitygrade = '{$lang[founder_optimizer_middle]}';
+									securitygrade = '{$lang['founder_optimizer_middle']}';
 								} else {
-									securitygrade = '{$lang[founder_optimizer_low]}';
+									securitygrade = '{$lang['founder_optimizer_low']}';
 								}
 							}
-							$('checkstatus').innerHTML = '{$lang[founder_optimizer_check_complete_js]}' + checknum + '{$lang[founder_optimizer_findnum]}' +  optimize_num + '{$lang[founder_optimizer_neednum]}' + ' {$lang[founder_optimizer_level]}: <span style="color:green;font-size:16px;font-weight:700;">' + securitygrade + '</span>';
+							$('checkstatus').innerHTML = '{$lang['founder_optimizer_check_complete_js']}' + checknum + '{$lang['founder_optimizer_findnum']}' +  optimize_num + '{$lang['founder_optimizer_neednum']}' + ' {$lang['founder_optimizer_level']}: <span style="color:green;font-size:16px;font-weight:700;">' + securitygrade + '</span>';
 						} else {
-							$('checkstatus').innerHTML = '{$lang[founder_optimizer_check_complete_js]}' + checknum + '{$lang[founder_optimizer_findnum]}' +  optimize_num + '{$lang[founder_optimizer_neednum]}';
+							$('checkstatus').innerHTML = '{$lang['founder_optimizer_check_complete_js']}' + checknum + '{$lang['founder_optimizer_findnum']}' +  optimize_num + '{$lang['founder_optimizer_neednum']}';
 						}
 					}
 				}
@@ -309,7 +302,7 @@ if($operation == 'optimize_unit') {
 				}
 			</script>
 END;
-		echo '<table class="tb tb2 tb3" style="margin-top:0;">';
+		echo '<table class="tb tb2" style="margin-top:0;">';
 		foreach($optimizer_option as $option) {
 			echo '<tr class="hover" id="progress_'.$option.'_tr">';
 			echo '<td width="200"><div id="progress_'.$option.'_unit">'.$lang['optimizer_check_unit_'.$option].'</td>';
@@ -319,18 +312,18 @@ END;
 		}
 		echo '</table>';
 
-		echo '<table id="optimizerable" class="tb tb2 tb3" style="margin-top:0;display:none;">';
-		echo '<tr><td width="200" style="color:red;font-weight:700;"><a href="javascript:;" onclick="showoptions(this, \'ooclass\')">[-]</a> '.$lang['founder_optimizer_needopti'].'(<span id="optimizerablenum"></span>)</td><td width="350"></td><td></td></tr>';
+		echo '<table id="optimizerable" class="tb tb2" style="margin-top:0;display:none;">';
+		echo '<tr><td width="300" style="color:red;font-weight:700;"><a href="javascript:;" onclick="showoptions(this, \'ooclass\')">[-]</a> '.$lang['founder_optimizer_needopti'].'(<span id="optimizerablenum"></span>)</td><td width="350"></td><td width="100"></td></tr>';
 		echo '</table>';
-		echo '<table id="securityoption" class="tb tb2 tb3" style="margin-top:0;display:none;">';
-		echo '<tr><td width="200" style="color:green;font-weight:700;"><a href="javascript:;" onclick="showoptions(this, \'soclass\')">[+]</a> '.$lang['founder_optimizer_safe'].'(<span id="securityoptionnum"></span>)</td><td width="350"></td><td></td></tr>';
+		echo '<table id="securityoption" class="tb tb2" style="margin-top:0;display:none;">';
+		echo '<tr><td width="300" style="color:green;font-weight:700;"><a href="javascript:;" onclick="showoptions(this, \'soclass\')">[+]</a> '.$lang['founder_optimizer_safe'].'(<span id="securityoptionnum"></span>)</td><td width="350"></td><td width="100"></td></tr>';
 		echo '</table>';
-		echo '<table id="tipoption" class="tb tb2 tb3" style="margin-top:0;display:none;">';
-		echo '<tr><td width="200" style="color:blue;font-weight:700;"><a href="javascript:;" onclick="showoptions(this, \'toclass\')">[+]</a> '.$lang['founder_optimizer_notice'].'(<span id="tipoptionnum"></span>)</td><td width="350"></td><td></td></tr>';
+		echo '<table id="tipoption" class="tb tb2" style="margin-top:0;display:none;">';
+		echo '<tr><td width="300" style="color:blue;font-weight:700;"><a href="javascript:;" onclick="showoptions(this, \'toclass\')">[+]</a> '.$lang['founder_optimizer_notice'].'(<span id="tipoptionnum"></span>)</td><td width="350"></td><td width="100"></td></tr>';
 		echo '</table>';
 	}
 
-	showtablefooter();
+	showboxfooter();
 }
 
 ?>

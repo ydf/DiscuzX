@@ -42,18 +42,18 @@ $cachelife_text = 3600;		// Life span for cache of text searching
 
 $srchtype = empty($_GET['srchtype']) ? '' : trim($_GET['srchtype']);
 $searchid = isset($_GET['searchid']) ? intval($_GET['searchid']) : 0;
-$seltableid = intval($_GET['seltableid']);
+$seltableid = intval(getgpc('seltableid'));
 
 if($srchtype != 'title' && $srchtype != 'fulltext') {
 	$srchtype = '';
 }
 
-$srchtxt = trim($_GET['srchtxt']);
-$srchuid = intval($_GET['srchuid']);
+$srchtxt = trim(getgpc('srchtxt'));
+$srchuid = intval(getgpc('srchuid'));
 $srchuname = isset($_GET['srchuname']) ? trim(str_replace('|', '', $_GET['srchuname'])) : '';;
-$srchfrom = intval($_GET['srchfrom']);
-$before = intval($_GET['before']);
-$srchfid = $_GET['srchfid'];
+$srchfrom = intval(getgpc('srchfrom'));
+$before = intval(getgpc('before'));
+$srchfid = getgpc('srchfid');
 $srhfid = intval($_GET['srhfid']);
 
 $keyword = isset($srchtxt) ? dhtmlspecialchars(trim($srchtxt)) : '';
@@ -65,23 +65,23 @@ if(!empty($srchfid) && !is_numeric($srchfid)) {
 
 if(!submitcheck('searchsubmit', 1)) {
 
-	if($_GET['adv']) {
+	if(getgpc('adv')) {
 		include template('search/forum_adv');
 	} else {
 		include template('search/forum');
 	}
 
 } else {
-	$orderby = in_array($_GET['orderby'], array('dateline', 'replies', 'views')) ? $_GET['orderby'] : 'lastpost';
+	$orderby = in_array(getgpc('orderby'), array('dateline', 'replies', 'views')) ? $_GET['orderby'] : 'lastpost';
 	$ascdesc = isset($_GET['ascdesc']) && $_GET['ascdesc'] == 'asc' ? 'asc' : 'desc';
 	$orderbyselected = array($orderby => 'selected="selected"');
-	$ascchecked = array($ascdesc => 'checked="checked""');	
+	$ascchecked = array($ascdesc => 'checked="checked""');
 
 	if(!empty($searchid)) {
 
 		require_once libfile('function/misc');
 
-		$page = max(1, intval($_GET['page']));
+		$page = max(1, intval(getgpc('page')));
 		$start_limit = ($page - 1) * $_G['tpp'];
 
 		$index = C::t('common_searchindex')->fetch_by_searchid_srchmod($searchid, $srchmod);
@@ -105,7 +105,7 @@ if(!submitcheck('searchsubmit', 1)) {
 				if(!empty($srchfid) ) {
 					$forumselect = str_replace('<option value="'.$srchfid.'">', '<option value="'.$srchfid.'" selected="selected">', $forumselect);
 				}
-			}			
+			}
 			if(count($fids) == 1 && in_array($_G['adminid'], array(1,2,3))) {
 				$modfid = $fids[0];
 				if($_G['adminid'] == 3 && !C::t('forum_moderator')->fetch_uid_by_fid_uid($modfid, $_G['uid'])) {
@@ -126,7 +126,7 @@ if(!submitcheck('searchsubmit', 1)) {
 					if($post['status'] & 1) {
 						$threadlist[$post['tid']]['message'] = lang('forum/template', 'message_single_banned');
 					} else {
-						$threadlist[$post['tid']]['message'] = bat_highlight(messagecutstr($post['message'], 200), $keyword);
+						$threadlist[$post['tid']]['message'] = bat_highlight(threadmessagecutstr($threadlist[$post['tid']], $post['message'], 200), $keyword);
 					}
 				}
 			}
@@ -189,9 +189,9 @@ if(!submitcheck('searchsubmit', 1)) {
 		} else {
 			$specialpluginstr = '';
 		}
-		$special = $_GET['special'];
+		$special = getgpc('special');
 		$specials = $special ? implode(',', $special) : '';
-		$srchfilter = in_array($_GET['srchfilter'], array('all', 'digest', 'top')) ? $_GET['srchfilter'] : 'all';
+		$srchfilter = in_array(getgpc('srchfilter'), array('all', 'digest', 'top')) ? $_GET['srchfilter'] : 'all';
 
 		$searchstring = 'forum|'.$srchtype.'|'.base64_encode($srchtxt).'|'.intval($srchuid).'|'.$srchuname.'|'.addslashes($fids).'|'.intval($srchfrom).'|'.intval($before).'|'.$srchfilter.'|'.$specials.'|'.$specialpluginstr.'|'.$seltableid;
 		$searchindex = array('id' => 0, 'dateline' => '0');

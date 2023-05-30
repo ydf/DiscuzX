@@ -11,6 +11,10 @@ if(!defined('IN_DISCUZ')) {
 	exit('Access Denied');
 }
 
+if(!$_G['setting']['friendstatus']) {
+	showmessage("friend_status_off");
+}
+
 require_once libfile('function/friend');
 
 $_GET['action'] = dhtmlspecialchars(preg_replace("/[^\[A-Za-z0-9_\]]/", '', $_GET['action']));
@@ -71,7 +75,7 @@ if($_GET['action'] == 'group') {
 } elseif($_GET['action'] == 'thread') {
 	$inviteduids = array();
 	$id = intval($_GET['id']);
-	$thread = C::t('forum_thread')->fetch($id);
+	$thread = C::t('forum_thread')->fetch_thread($id);
 	$at = 0;
 	$maxselect = 20;
 	if(empty($_GET['activity'])) {
@@ -81,7 +85,7 @@ if($_GET['action'] == 'group') {
 			$atnum = 0;
 			foreach(C::t('home_notification')->fetch_all_by_authorid_fromid($_G['uid'], $id, 'at') as $row) {
 				$atnum ++;
-				$inviteduids[$row[uid]] = $row['uid'];
+				$inviteduids[$row['uid']] = $row['uid'];
 			}
 			$maxselect = $_G['group']['allowat'] - $atnum;
 		} else {
@@ -105,7 +109,7 @@ if($_GET['action'] == 'group') {
 			}
 			$post = C::t('forum_post')->fetch_threadpost_by_tid_invisible($id);
 			require_once libfile('function/post');
-			$post['message'] = messagecutstr($post['message'], 150);
+			$post['message'] = threadmessagecutstr($thread, $post['message'], 150);
 			foreach(C::t('common_member')->fetch_all($uids, false, 0) as $uid => $user) {
 				if($at) {
 					notification_add($uid, 'at', 'at_message', array('from_id' => $id, 'from_idtype' => 'at', 'buyerid' => $_G['uid'], 'buyer' => $_G['username'], 'tid' => $id, 'subject' => $thread['subject'], 'pid' => $post['pid'], 'message' => $post['message']));

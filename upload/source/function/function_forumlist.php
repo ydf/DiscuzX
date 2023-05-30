@@ -26,7 +26,7 @@ function checkautoclose($thread) {
 function forum(&$forum) {
 	global $_G;
 	$lastvisit = $_G['member']['lastvisit'];
-	if(!$forum['viewperm'] || ($forum['viewperm'] && forumperm($forum['viewperm'])) || !empty($forum['allowview']) || (isset($forum['users']) && strstr($forum['users'], "\t$_G[uid]\t"))) {
+	if(!$forum['viewperm'] || ($forum['viewperm'] && forumperm($forum['viewperm'])) || !empty($forum['allowview']) || (isset($forum['users']) && strstr($forum['users'], "\t{$_G['uid']}\t"))) {
 		$forum['permission'] = 2;
 	} elseif(!$_G['setting']['hideprivate']) {
 		$forum['permission'] = 1;
@@ -36,7 +36,7 @@ function forum(&$forum) {
 
 	if($forum['icon']) {
 		$forum['icon'] = get_forumimg($forum['icon']);
-		$forum['icon'] = '<a href="forum.php?mod=forumdisplay&fid='.$forum['fid'].'"><img src="'.$forum['icon'].'" align="left" alt="'.$forum['name'].'" /></a>';
+		$forum['icon'] = '<a href="forum.php?mod=forumdisplay&fid='.$forum['fid'].'"><img src="'.$forum['icon'].'" '.(!empty($forum['extra']['iconwidth']) ? 'style="width: '.$forum['extra']['iconwidth'].'px;"' : '').' align="left" alt="'.$forum['name'].'" /></a>';
 	}
 
 	$lastpost = array(0, 0, '', '');
@@ -47,7 +47,7 @@ function forum(&$forum) {
 
 	list($lastpost['tid'], $lastpost['subject'], $lastpost['dateline'], $lastpost['author']) = $forum['lastpost'];
 	$thisforumlastvisit = array();
-	if($_G['cookie']['forum_lastvisit']) {
+	if(!empty($_G['cookie']['forum_lastvisit'])) {
 		preg_match("/D\_".$forum['fid']."\_(\d+)/", $_G['cookie']['forum_lastvisit'], $thisforumlastvisit);
 	}
 
@@ -85,6 +85,7 @@ function forumselect($groupselectable = FALSE, $arrayformat = 0, $selectedfid = 
 		if(!$forum['status'] && !$showhide) {
 			continue;
 		}
+		$selected = '';
 		if($selectedfid) {
 			if(!is_array($selectedfid)) {
 				$selected = $selectedfid == $forum['fid'] ? ' selected' : '';
@@ -99,14 +100,14 @@ function forumselect($groupselectable = FALSE, $arrayformat = 0, $selectedfid = 
 				$forumlist .= $groupselectable ? '<option value="'.($evalue ? 'gid_' : '').$forum['fid'].'" class="bold">--'.$forum['name'].'</option>' : '</optgroup><optgroup label="--'.$forum['name'].'">';
 			}
 			$visible[$forum['fid']] = true;
-		} elseif($forum['type'] == 'forum' && isset($visible[$forum['fup']]) && (!$forum['viewperm'] || ($forum['viewperm'] && forumperm($forum['viewperm'])) || strstr($forum['users'], "\t$_G[uid]\t")) && (!$special || (substr($forum['allowpostspecial'], -$special, 1)))) {
+		} elseif($forum['type'] == 'forum' && isset($visible[$forum['fup']]) && (!$forum['viewperm'] || ($forum['viewperm'] && forumperm($forum['viewperm'])) || strstr($forum['users'], "\t{$_G['uid']}\t")) && (!$special || (substr($forum['allowpostspecial'], -$special, 1)))) {
 			if($arrayformat) {
 				$forumlist[$forum['fup']]['sub'][$forum['fid']] = $forum['name'];
 			} else {
 				$forumlist .= '<option value="'.($evalue ? 'fid_' : '').$forum['fid'].'"'.$selected.'>'.$forum['name'].'</option>';
 			}
 			$visible[$forum['fid']] = true;
-		} elseif($forum['type'] == 'sub' && isset($visible[$forum['fup']]) && (!$forum['viewperm'] || ($forum['viewperm'] && forumperm($forum['viewperm'])) || strstr($forum['users'], "\t$_G[uid]\t")) && (!$special || substr($forum['allowpostspecial'], -$special, 1))) {
+		} elseif($forum['type'] == 'sub' && isset($visible[$forum['fup']]) && (!$forum['viewperm'] || ($forum['viewperm'] && forumperm($forum['viewperm'])) || strstr($forum['users'], "\t{$_G['uid']}\t")) && (!$special || substr($forum['allowpostspecial'], -$special, 1))) {
 			if($arrayformat) {
 				$forumlist[$forumcache[$forum['fup']]['fup']]['child'][$forum['fup']][$forum['fid']] = $forum['name'];
 			} else {
@@ -193,7 +194,7 @@ function replace_formhash($timestamp, $input) {
 function recommendupdate($fid, &$modrecommend, $force = '', $position = 0) {
 	global $_G;
 
-	$recommendlist = $recommendimagelist = $modedtids = array();
+	$recommendlist = $modedtids = array();
 	$num = $modrecommend['num'] ? intval($modrecommend['num']) : 10;
 	$imagenum = $modrecommend['imagenum'] = $modrecommend['imagenum'] ? intval($modrecommend['imagenum']) : 0;
 	$imgw = $modrecommend['imagewidth'] = $modrecommend['imagewidth'] ? intval($modrecommend['imagewidth']) : 200;
@@ -293,7 +294,7 @@ function recommendupdate($fid, &$modrecommend, $force = '', $position = 0) {
 		}
 	}
 
-	$recommendlists = $recommendlist = array();
+	$recommendlists = $recommendlist = $recommendimagelist = array();
 	foreach(C::t('forum_forumrecommend')->fetch_all_by_fid($fid, $position) as $recommend) {
 		if(($recommend['expiration'] && $recommend['expiration'] > TIMESTAMP) || !$recommend['expiration']) {
 			if($recommend['filename'] && strexists($recommend['filename'], "\t")) {
@@ -345,17 +346,17 @@ function recommendupdate($fid, &$modrecommend, $force = '', $position = 0) {
 function showstars($num) {
 	global $_G;
 	$return = '';
-	$alt = 'alt="Rank: '.$num.'"';
+	$alt = 'title="Rank: '.$num.'"';
 	if(empty($_G['setting']['starthreshold'])) {
 		for($i = 0; $i < $num; $i++) {
-			$return .= '<img src="'.$_G['style']['imgdir'].'/star_level1.gif" '.$alt.' />';
+			$return .= '<i class="fico-star1 fic4 fc-l" '.$alt.'></i>';
 		}
 	} else {
 		for($i = 3; $i > 0; $i--) {
 			$numlevel = intval($num / pow($_G['setting']['starthreshold'], ($i - 1)));
 			$num = ($num % pow($_G['setting']['starthreshold'], ($i - 1)));
 			for($j = 0; $j < $numlevel; $j++) {
-				$return .= '<img src="'.$_G['style']['imgdir'].'/star_level'.$i.'.gif" '.$alt.' />';
+				$return .= '<i class="fico-star'.$i.' fic4 fc-l" '.$alt.'></i>';
 			}
 		}
 	}
@@ -423,4 +424,62 @@ function threadclasscount($fid, $id = 0, $idtype = '', $count = null) {
 
 }
 
+function get_attach($list, $video = false, $audio = false){
+	global $_G;
+	require_once libfile('function/post');
+	require_once libfile('function/discuzcode');
+	$tids = $threads = $attachtableid_array = $threadlist_data = $posttableids = array();
+	foreach($list as $value) {
+		$tids[] = $value['tid'];
+		if(!in_array($value['posttableid'], $posttableids)){
+			$posttableids[] = $value['posttableid'];
+		}
+		$threads[$value['tid']] = $value;
+	}
+	foreach ($posttableids as $id) {
+		$posts = C::t('forum_post')->fetch_all_by_tid($id, $tids, true, '', 0, 0, 1, null, null, null);
+		foreach($posts as $value) {
+			if(!$_G['forum']['ismoderator'] && $value['status'] & 1) {
+				$threadlist_data[$value['tid']]['message'] = lang('forum/template', 'message_single_banned');
+			} elseif(strpos($value['message'], '[/password]') !== FALSE) {
+				$threadlist_data[$value['tid']]['message'] = lang('forum/template', 'message_password_exists');
+			} elseif($threads[$value['tid']]['readperm'] > 0) {
+				$value['message'] = '';
+			} else {
+				if($threads[$value['tid']]['price'] > 0) {
+					preg_match_all("/\[free\](.+?)\[\/free\]/is", $value['message'], $matches);
+					$value['message'] = '';
+					if(!empty($matches[1])) {
+						foreach($matches[1] as $match) {
+							$value['message'] .= $match.' ';
+						}
+					}
+				}
+				if($value['message'] && ($video || $audio)){
+					$value['media'] = '';
+					$value['message'] = preg_replace(array("/\[hide=?\d*\](.*?)\[\/hide\]/is"), array(""), $value['message']);
+					$value['msglower'] = strtolower($value['message']);
+					if(strpos($value['msglower'], '[/media]') !== FALSE && $video) {
+						preg_match("/\[media=([\w,]+)\]\s*([^\[\<\r\n]+?)\s*\[\/media\]/is", $value['message'], $value['video']);
+						$threadlist_data[$value['tid']]['media'] = parsemedia($value['video'][1], $value['video'][2]);
+					}elseif(strpos($value['msglower'], '[/audio]') !== FALSE && $audio) {
+						preg_match("/\[audio(=1)*\]\s*([^\[\<\r\n]+?)\s*\[\/audio\]/is", $value['message'], $value['audio']);
+						$threadlist_data[$value['tid']]['media'] = parseaudio($value['audio'][2], 400);
+					}
+				}
+				$threadlist_data[$value['tid']]['message'] = messagecutstr($value['message'], 90);
+				if($threads[$value['tid']]['attachment'] == 2) {
+					$attachtableid_array[getattachtableid($value['tid'])][] = $value['pid'];
+				}
+			}
+		}
+	}
+	foreach($attachtableid_array as $tableid => $pids) {
+		$attachs = C::t('forum_attachment_n')->fetch_all_by_pid_width($tableid, $pids, 0);
+		foreach($attachs as $value){
+			$threadlist_data[$value['tid']]['attachment'][] = getforumimg($value['aid'], 0, 2000, 550);
+		}
+	}
+	return $threadlist_data;
+}
 ?>

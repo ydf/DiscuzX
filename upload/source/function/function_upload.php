@@ -19,7 +19,7 @@ function getuploadconfig($uid=0, $fid=0, $limit=true) {
 	$authkey = $_G['config']['security']['authkey'];
 	$config['hash'] = md5(substr(md5($authkey), 8).$uid);
 
-	$imageexts = array('jpg','jpeg','gif','png','bmp');
+	$imageexts = array('jpg','jpeg','gif','png','bmp','webp');
 	$forumattachextensions = '';
 	$fid = intval($fid);
 	if($fid) {
@@ -37,7 +37,7 @@ function getuploadconfig($uid=0, $fid=0, $limit=true) {
 	loadcache('attachtype');
 	$fid = isset($_G['cache']['attachtype'][$fid]) ? $fid : 0;
 	$filter = array();
-	if(is_array($_G['cache']['attachtype'][$fid])) {
+	if(isset($_G['cache']['attachtype'][$fid]) && is_array($_G['cache']['attachtype'][$fid])) {
 		foreach($_G['cache']['attachtype'][$fid] as $extension => $maxsize) {
 			if($maxsize == 0) {
 				$notallow[] = $extension;
@@ -86,7 +86,7 @@ function getuploadconfig($uid=0, $fid=0, $limit=true) {
 	if($limit) {
 		if($_G['group']['maxattachnum']) {
 			$todayattachs = getuserprofile('todayattachs');
-			$config['maxattachnum'] = $_G['group']['maxattachnum'] - $todayattachs;
+			$config['maxattachnum'] = (int)$_G['group']['maxattachnum'] - (int)$todayattachs;
 			$config['maxattachnum'] = $config['maxattachnum'] > 0 ? $config['maxattachnum'] : -1;
 			$config['limit'] = $config['maxattachnum'] > 0 ? $config['maxattachnum'] : 0;
 		}

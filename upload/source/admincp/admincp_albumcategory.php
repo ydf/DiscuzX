@@ -28,7 +28,7 @@ if($operation == 'list') {
 
 		/*search={"albumcategory":"action=albumcategory"}*/
 		showformheader('albumcategory');
-		showtableheader();
+		showtableheader('', 'nobottom');
 		showsetting('system_category_stat', 'settingnew[albumcategorystat]', $_G['setting']['albumcategorystat'], 'radio', '', 1);
 		showsetting('system_category_required', 'settingnew[albumcategoryrequired]', $_G['setting']['albumcategoryrequired'], 'radio', '');
 		echo '<tr><td colspan="2">';
@@ -42,6 +42,7 @@ if($operation == 'list') {
 		echo '<tr><td class="td25">&nbsp;</td><td colspan="3"><div><a class="addtr" onclick="addrow(this, 0, 0)" href="###">'.cplang('albumcategory_addcategory').'</a></div></td></tr>';
 		showtablefooter();
 		echo '</td></tr>';
+		showtablefooter();
 		/*search*/
 
 		showtableheader('', 'notop');
@@ -57,9 +58,9 @@ if($operation == 'list') {
 		echo <<<SCRIPT
 <script type="text/Javascript">
 var rowtypedata = [
-	[[1,'<input type="text" class="txt" name="neworder[{1}][]" value="0" />', 'td25'], [3, '<div class="parentboard"><input type="text" class="txt" value="$lang[albumcategory_addcategory]" name="newname[{1}][]"/></div>']],
-	[[1,'<input type="text" class="txt" name="neworder[{1}][]" value="0" />', 'td25'], [3, '<div class="board"><input type="text" class="txt" value="$lang[albumcategory_addsubcategory]" name="newname[{1}][]"/></div>']],
-	[[1,'<input type="text" class="txt" name="neworder[{1}][]" value="0" />', 'td25'], [3, '<div class="childboard"><input type="text" class="txt" value="$lang[albumcategory_addthirdcategory]" name="newname[{1}][]"/></div>']],
+	[[1,'<input type="text" class="txt" name="neworder[{1}][]" value="0" />', 'td25'], [3, '<div class="parentboard"><input type="text" class="txt" value="{$lang['albumcategory_addcategory']}" name="newname[{1}][]"/></div>']],
+	[[1,'<input type="text" class="txt" name="neworder[{1}][]" value="0" />', 'td25'], [3, '<div class="board"><input type="text" class="txt" value="{$lang['albumcategory_addsubcategory']}" name="newname[{1}][]"/></div>']],
+	[[1,'<input type="text" class="txt" name="neworder[{1}][]" value="0" />', 'td25'], [3, '<div class="childboard"><input type="text" class="txt" value="{$lang['albumcategory_addthirdcategory']}" name="newname[{1}][]"/></div>']],
 ];
 </script>
 SCRIPT;
@@ -123,7 +124,7 @@ SCRIPT;
 
 		showformheader('albumcategory&operation=delete&catid='.$_GET['catid']);
 		showtableheader();
-		if($category[$_GET[catid]]['children']) {
+		if($category[$_GET['catid']]['children']) {
 			showsetting('albumcategory_subcategory_moveto', '', '',
 				'<input type="radio" name="subcat_op" value="trash" id="subcat_op_trash" checked="checked" />'.
 				'<label for="subcat_op_trash" />'.cplang('albumcategory_subcategory_moveto_trash').'</label>'.
@@ -188,21 +189,21 @@ function showcategoryrow($key, $level = 0, $last = '') {
 		$return = '<tr class="hover"><td class="td25"><input type="text" class="txt" name="order['.$value['catid'].']" value="'.$value['displayorder'].'" /></td><td><div class="'.$class.'">'.
 		'<input type="text" name="name['.$value['catid'].']" value="'.$value['catname'].'" class="txt" />'.
 		'</div>'.
-		'</td><td>'.$value[num].'</td><td><a href="'.ADMINSCRIPT.'?action=albumcategory&operation=delete&catid='.$value['catid'].'">'.cplang('delete').'</a></td></tr>';
+		'</td><td>'.$value['num'].'</td><td><a href="'.ADMINSCRIPT.'?action=albumcategory&operation=delete&catid='.$value['catid'].'">'.cplang('delete').'</a></td></tr>';
 	} elseif($level == 1) {
 		$return = '<tr class="hover"><td class="td25"><input type="text" class="txt" name="order['.$value['catid'].']" value="'.$value['displayorder'].'" /></td><td><div class="board">'.
 		'<input type="text" name="name['.$value['catid'].']" value="'.$value['catname'].'" class="txt" />'.
 		'<a class="addchildboard" onclick="addrowdirect = 1;addrow(this, 2, '.$value['catid'].')" href="###">'.cplang('albumcategory_addthirdcategory').'</a></div>'.
-		'</td><td>'.$value[num].'</td><td><a href="'.ADMINSCRIPT.'?action=albumcategory&operation=delete&catid='.$value['catid'].'">'.cplang('delete').'</a></td></tr>';
-		for($i=0,$L=count($value['children']); $i<$L; $i++) {
+		'</td><td>'.$value['num'].'</td><td><a href="'.ADMINSCRIPT.'?action=albumcategory&operation=delete&catid='.$value['catid'].'">'.cplang('delete').'</a></td></tr>';
+		for($i=0,$L=(is_array($value['children']) ? count($value['children']) : 0); $i<$L; $i++) {
 			$return .= showcategoryrow($value['children'][$i], 2, $i==$L-1);
 		}
 	} else {
 		$return = '<tr class="hover"><td class="td25"><input type="text" class="txt" name="order['.$value['catid'].']" value="'.$value['displayorder'].'" /></td><td><div class="parentboard">'.
 		'<input type="text" name="name['.$value['catid'].']" value="'.$value['catname'].'" class="txt" />'.
 		'</div>'.
-		'</td><td>'.$value[num].'</td><td><a href="'.ADMINSCRIPT.'?action=albumcategory&operation=delete&catid='.$value['catid'].'">'.cplang('delete').'</a></td></tr>';
-		for($i=0,$L=count($value['children']); $i<$L; $i++) {
+		'</td><td>'.$value['num'].'</td><td><a href="'.ADMINSCRIPT.'?action=albumcategory&operation=delete&catid='.$value['catid'].'">'.cplang('delete').'</a></td></tr>';
+		for($i=0,$L=(is_array($value['children']) ? count($value['children']) : 0); $i<$L; $i++) {
 			$return .= showcategoryrow($value['children'][$i], 1, '');
 		}
 		$return .= '<tr><td class="td25"></td><td colspan="3"><div class="lastboard"><a class="addtr" onclick="addrow(this, 1, '.$value['catid'].')" href="###">'.cplang('albumcategory_addsubcategory').'</a></div>';

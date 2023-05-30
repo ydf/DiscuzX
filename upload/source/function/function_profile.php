@@ -17,8 +17,8 @@ function profile_setting($fieldid, $space=array(), $showstatus=false, $ignoreunc
 	if(empty($_G['cache']['profilesetting'])) {
 		loadcache('profilesetting');
 	}
-	$field = $_G['cache']['profilesetting'][$fieldid];
-	if(empty($field) || !$field['available'] || in_array($fieldid, array('uid', 'constellation', 'zodiac', 'birthmonth', 'birthyear', 'birthprovince', 'birthdist', 'birthcommunity', 'resideprovince', 'residedist', 'residecommunity'))) {
+	$field = getglobal('cache/profilesetting/'.$fieldid);
+	if(empty($field) || !$field['available'] || in_array($fieldid, array('uid', 'constellation', 'zodiac', 'birthmonth', 'birthyear', 'birthcountry', 'birthprovince', 'birthdist', 'birthcommunity', 'residecountry', 'resideprovince', 'residedist', 'residecommunity'))) {
 		return '';
 	}
 
@@ -79,17 +79,17 @@ function profile_setting($fieldid, $space=array(), $showstatus=false, $ignoreunc
 			$selectstr = $i == $space['birthday']?' selected':'';
 			$birthdayhtml .= "<option value=\"$i\"$selectstr>$i</option>";
 		}
-		$html = '<select name="birthyear" id="birthyear" class="ps" onchange="showbirthday();" tabindex="1">'
+		$html = '<select name="birthyear" id="birthyear" class="ps" onchange="showbirthday();">'
 				.'<option value="">'.lang('space', 'year').'</option>'
 				.$birthyeayhtml
 				.'</select>'
 				.'&nbsp;&nbsp;'
-				.'<select name="birthmonth" id="birthmonth" class="ps" onchange="showbirthday();" tabindex="1">'
+				.'<select name="birthmonth" id="birthmonth" class="ps" onchange="showbirthday();">'
 				.'<option value="">'.lang('space', 'month').'</option>'
 				.$birthmonthhtml
 				.'</select>'
 				.'&nbsp;&nbsp;'
-				.'<select name="birthday" id="birthday" class="ps" tabindex="1">'
+				.'<select name="birthday" id="birthday" class="ps">'
 				.'<option value="">'.lang('space', 'day').'</option>'
 				.$birthdayhtml
 				.'</select>';
@@ -99,7 +99,7 @@ function profile_setting($fieldid, $space=array(), $showstatus=false, $ignoreunc
 			return '<span>'.lang('space', 'gender_'.intval($space[$fieldid])).'</span>';
 		}
 		$selected = array($space[$fieldid]=>' selected="selected"');
-		$html = '<select name="gender" id="gender" class="ps" tabindex="1">';
+		$html = '<select name="gender" id="gender" class="ps">';
 		if($field['unchangeable']) {
 			$html .= '<option value="">'.lang('space', 'gender').'</option>';
 		} else {
@@ -111,13 +111,13 @@ function profile_setting($fieldid, $space=array(), $showstatus=false, $ignoreunc
 
 	} elseif($fieldid=='birthcity') {
 		if($field['unchangeable'] && !empty($space[$fieldid])) {
-			return '<span>'.$space['birthprovince'].'-'.$space['birthcity'].'</span>';
+			return '<span>'.$space['birthcountry'].'-'.$space['birthprovince'].'-'.$space['birthcity'].'</span>';
 		}
-		$values = array(0,0,0,0);
-		$elems = array('birthprovince', 'birthcity', 'birthdist', 'birthcommunity');
-		if(!empty($space['birthprovince'])) {
+		$values = array(0,0,0,0,0);
+		$elems = array('birthcountry', 'birthprovince', 'birthcity', 'birthdist', 'birthcommunity');
+		if(!empty($space['birthcountry'])) {
 			$html = profile_show('birthcity', $space);
-			$html .= '&nbsp;(<a href="javascript:;" onclick="showdistrict(\'birthdistrictbox\', [\'birthprovince\', \'birthcity\', \'birthdist\', \'birthcommunity\'], 4, \'\', \'birth\'); return false;">'.lang('spacecp', 'profile_edit').'</a>)';
+			$html .= '&nbsp;(<a href="javascript:;" onclick="showdistrict(\'birthdistrictbox\', [\'birthcountry\', \'birthprovince\', \'birthcity\', \'birthdist\', \'birthcommunity\'], 4, \'\', \'birth\'); return false;">'.lang('spacecp', 'profile_edit').'</a>)';
 			$html .= '<p id="birthdistrictbox"></p>';
 		} else {
 			$html = '<p id="birthdistrictbox">'.showdistrict($values, $elems, 'birthdistrictbox', 1, 'birth').'</p>';
@@ -127,17 +127,17 @@ function profile_setting($fieldid, $space=array(), $showstatus=false, $ignoreunc
 		if($field['unchangeable'] && !empty($space[$fieldid])) {
 			return '<span>'.$space['resideprovince'].'-'.$space['residecity'].'</span>';
 		}
-		$values = array(0,0,0,0);
-		$elems = array('resideprovince', 'residecity', 'residedist', 'residecommunity');
-		if(!empty($space['resideprovince'])) {
+		$values = array(0,0,0,0,0);
+		$elems = array('residecountry', 'resideprovince', 'residecity', 'residedist', 'residecommunity');
+		if(!empty($space['residecountry'])) {
 			$html = profile_show('residecity', $space);
-			$html .= '&nbsp;(<a href="javascript:;" onclick="showdistrict(\'residedistrictbox\', [\'resideprovince\', \'residecity\', \'residedist\', \'residecommunity\'], 4, \'\', \'reside\'); return false;">'.lang('spacecp', 'profile_edit').'</a>)';
+			$html .= '&nbsp;(<a href="javascript:;" onclick="showdistrict(\'residedistrictbox\', [\'residecountry\', \'resideprovince\', \'residecity\', \'residedist\', \'residecommunity\'], 4, \'\', \'reside\'); return false;">'.lang('spacecp', 'profile_edit').'</a>)';
 			$html .= '<p id="residedistrictbox"></p>';
 		} else {
 			$html = '<p id="residedistrictbox">'.showdistrict($values, $elems, 'residedistrictbox', 1, 'reside').'</p>';
 		}
 	} elseif($fieldid=='qq') {
-		$html = "<input type=\"text\" name=\"$fieldid\" id=\"$fieldid\" class=\"px\" value=\"$space[$fieldid]\" tabindex=\"1\" /><p><a href=\"\" class=\"xi2\" onclick=\"this.href='//wp.qq.com/set.html?from=discuz&uin='+$('$fieldid').value\" target=\"_blank\">".lang('spacecp', 'qq_set_status')."</a></p>";
+		$html = "<input type=\"text\" name=\"$fieldid\" id=\"$fieldid\" class=\"px\" value=\"$space[$fieldid]\" /><p><a href=\"\" class=\"xi2\" onclick=\"this.href='//wp.qq.com/set.html?from=discuz&uin='+$('$fieldid').value\" target=\"_blank\">".lang('spacecp', 'qq_set_status')."</a></p>";
 	} else {
 		if($field['unchangeable'] && $space[$fieldid]!='') {
 			if($field['formtype']=='file') {
@@ -148,17 +148,17 @@ function profile_setting($fieldid, $space=array(), $showstatus=false, $ignoreunc
 			}
 		}
 		if($field['formtype']=='textarea') {
-			$html = "<textarea name=\"$fieldid\" id=\"$fieldid\" class=\"pt\" rows=\"3\" cols=\"40\" tabindex=\"1\">$space[$fieldid]</textarea>";
+			$html = "<textarea name=\"$fieldid\" id=\"$fieldid\" class=\"pt\" rows=\"3\" cols=\"40\">$space[$fieldid]</textarea>";
 		} elseif($field['formtype']=='select') {
 			$field['choices'] = explode("\n", $field['choices']);
-			$html = "<select name=\"$fieldid\" id=\"$fieldid\" class=\"ps\" tabindex=\"1\">";
+			$html = "<select name=\"$fieldid\" id=\"$fieldid\" class=\"ps\">";
 			foreach($field['choices'] as $op) {
 				$html .= "<option value=\"$op\"".($op==$space[$fieldid] ? 'selected="selected"' : '').">$op</option>";
 			}
 			$html .= '</select>';
 		} elseif($field['formtype']=='list') {
 			$field['choices'] = explode("\n", $field['choices']);
-			$html = "<select name=\"{$fieldid}[]\" id=\"$fieldid\" class=\"ps\" multiple=\"multiplue\" tabindex=\"1\">";
+			$html = "<select name=\"{$fieldid}[]\" id=\"$fieldid\" class=\"ps\" multiple=\"multiplue\">";
 			$space[$fieldid] = explode("\n", $space[$fieldid]);
 			foreach($field['choices'] as $op) {
 				$html .= "<option value=\"$op\"".(in_array($op, $space[$fieldid]) ? 'selected="selected"' : '').">$op</option>";
@@ -169,43 +169,43 @@ function profile_setting($fieldid, $space=array(), $showstatus=false, $ignoreunc
 			$space[$fieldid] = explode("\n", $space[$fieldid]);
 			foreach($field['choices'] as $op) {
 				$html .= ''
-					."<label class=\"lb\"><input type=\"checkbox\" name=\"{$fieldid}[]\" id=\"$fieldid\" class=\"pc\" value=\"$op\" tabindex=\"1\"".(in_array($op, $space[$fieldid]) ? ' checked="checked"' : '')." />"
+					."<label class=\"lb\"><input type=\"checkbox\" name=\"{$fieldid}[]\" id=\"$fieldid\" class=\"pc\" value=\"$op\"".(in_array($op, $space[$fieldid]) ? ' checked="checked"' : '')." />"
 					."$op</label>";
 			}
 		} elseif($field['formtype']=='radio') {
 			$field['choices'] = explode("\n", $field['choices']);
 			foreach($field['choices'] as $op) {
 				$html .= ''
-						."<label class=\"lb\"><input type=\"radio\" name=\"{$fieldid}\" class=\"pr\" value=\"$op\" tabindex=\"1\"".($op == $space[$fieldid] ? ' checked="checked"' : '')." />"
+						."<label class=\"lb\"><input type=\"radio\" name=\"{$fieldid}\" class=\"pr\" value=\"$op\"".($op == $space[$fieldid] ? ' checked="checked"' : '')." />"
 						."$op</label>";
 			}
 		} elseif($field['formtype']=='file') {
-			$html = "<input type=\"file\" value=\"\" name=\"$fieldid\" id=\"$fieldid\" tabindex=\"1\" class=\"pf\" style=\"height:26px;\" /><input type=\"hidden\" name=\"$fieldid\" value=\"$space[$fieldid]\" />";
+			$html = "<input type=\"file\" value=\"\" name=\"$fieldid\" id=\"$fieldid\" class=\"pf\" style=\"height:26px;\" /><input type=\"hidden\" name=\"$fieldid\" value=\"$space[$fieldid]\" />";
 			if(!empty($space[$fieldid])) {
 				$url = getglobal('setting/attachurl').'./profile/'.$space[$fieldid];
-				$html .= "&nbsp;<label><input type=\"checkbox\" class=\"checkbox\" tabindex=\"1\" name=\"deletefile[$fieldid]\" id=\"$fieldid\" value=\"yes\" />".lang('spacecp', 'delete')."</label><br /><a href=\"$url\" target=\"_blank\"><img src=\"$url\" width=\"200\" class=\"mtm\" /></a>";
+				$html .= "&nbsp;<label><input type=\"checkbox\" class=\"checkbox\" name=\"deletefile[$fieldid]\" id=\"$fieldid\" value=\"yes\" />".lang('spacecp', 'delete')."</label><br /><a href=\"$url\" target=\"_blank\"><img src=\"$url\" width=\"200\" class=\"mtm\" /></a>";
 			}
 		} else {
-			$html = "<input type=\"text\" name=\"$fieldid\" id=\"$fieldid\" class=\"px\" value=\"$space[$fieldid]\" tabindex=\"1\" />";
+			$html = "<input type=\"text\" name=\"$fieldid\" id=\"$fieldid\" class=\"px\" value=\"$space[$fieldid]\" />";
 		}
 	}
 	$html .= !$ignoreshowerror ? "<div class=\"rq mtn\" id=\"showerror_$fieldid\"></div>" : '';
 	if($showstatus) {
-		$html .= "<p class=\"d\">$value[description]";
-		if($space[$fieldid]=='' && $value['unchangeable']) {
-			$html .= lang('spacecp', 'profile_unchangeable');
+		$tips = isset($field['description']) ? $field['description'] : '';
+		if($space[$fieldid] == '' && !empty($field['unchangeable'])) {
+			$tips .= (empty($tips) ? '' : ' ').lang('spacecp', 'profile_unchangeable');
 		}
 		if($verifyvalue !== null) {
 			if($field['formtype'] == 'file') {
 				$imgurl = getglobal('setting/attachurl').'./profile/'.$verifyvalue;
 				$verifyvalue = "<img src='$imgurl' alt='$imgurl' style='max-width: 500px;'/>";
 			}
-			$html .= "<strong>".lang('spacecp', 'profile_is_verifying')." (<a href=\"#\" onclick=\"display('newvalue_$fieldid');return false;\">".lang('spacecp', 'profile_mypost')."</a>)</strong>"
+			$tips .= (empty($tips) ? '' : ' ')."<strong>".lang('spacecp', 'profile_is_verifying')." (<a href=\"#\" onclick=\"display('newvalue_$fieldid');return false;\">".lang('spacecp', 'profile_mypost')."</a>)</strong>"
 				."<p id=\"newvalue_$fieldid\" style=\"display:none\">".$verifyvalue."</p>";
 		} elseif($field['needverify']) {
-			$html .= lang('spacecp', 'profile_need_verifying');
+			$tips .= (empty($tips) ? '' : ' ').lang('spacecp', 'profile_need_verifying');
 		}
-		$html .= '</p>';
+		$html .= '<p class="d">' . $tips . '</p>';
 	}
 
 	return $html;
@@ -229,12 +229,12 @@ function profile_check($fieldid, &$value, $space=array()) {
 
 	if($value=='') {
 		if($field['required']) {
-			if(in_array($fieldid, array('birthprovince', 'birthcity', 'birthdist', 'birthcommunity', 'resideprovince', 'residecity', 'residedist', 'residecommunity'))) {
+			if(in_array($fieldid, array('birthcountry', 'birthprovince', 'birthcity', 'birthdist', 'birthcommunity', 'residecountry', 'resideprovince', 'residecity', 'residedist', 'residecommunity'))) {
 				if(substr($fieldid, 0, 5) == 'birth') {
-					if(!empty($_GET['birthprovince']) || !empty($_GET['birthcity']) || !empty($_GET['birthdist']) || !empty($_GET['birthcommunity'])) {
+					if(!empty($_GET['birthcountry']) || !empty($_GET['birthprovince']) || !empty($_GET['birthcity']) || !empty($_GET['birthdist']) || !empty($_GET['birthcommunity'])) {
 						return true;
 					}
-				} elseif(!empty($_GET['resideprovince']) || !empty($_GET['residecity']) || !empty($_GET['residedist']) || !empty($_GET['residecommunity'])) {
+				} elseif(!empty($_GET['residecountry']) || !empty($_GET['resideprovince']) || !empty($_GET['residecity']) || !empty($_GET['residedist']) || !empty($_GET['residecommunity'])) {
 					return true;
 				}
 			}
@@ -251,7 +251,7 @@ function profile_check($fieldid, &$value, $space=array()) {
 	if(in_array($fieldid, array('birthday', 'birthmonth', 'birthyear', 'gender'))) {
 		$value = intval($value);
 		return true;
-	} elseif(in_array($fieldid, array('birthprovince', 'birthcity', 'birthdist', 'birthcommunity', 'resideprovince', 'residecity', 'residedist', 'residecommunity'))) {
+	} elseif(in_array($fieldid, array('birthcountry', 'birthprovince', 'birthcity', 'birthdist', 'birthcommunity', 'residecountry', 'resideprovince', 'residecity', 'residedist', 'residecommunity'))) {
 		$value = getstr($value);
 		return true;
 	}
@@ -298,7 +298,7 @@ function profile_show($fieldid, $space=array(), $getalone = false) {
 		$_G['cache']['profilesetting'][$fieldid] = $_G['cache']['profilesetting']['qq'];
 	}
 	$field = $_G['cache']['profilesetting'][$fieldid];
-	if(empty($field) || !$field['available'] || (!$getalone && in_array($fieldid, array('uid', 'birthmonth', 'birthyear', 'birthprovince', 'resideprovince')))) {
+	if(empty($field) || !$field['available'] || (!$getalone && in_array($fieldid, array('uid', 'birthmonth', 'birthyear', 'birthcountry', 'residecountry')))) {
 		return false;
 	}
 
@@ -311,12 +311,14 @@ function profile_show($fieldid, $space=array(), $getalone = false) {
 		}
 		return $return;
 	} elseif($fieldid=='birthcity' && !$getalone) {
-		return $space['birthprovince']
+		return $space['birthcountry']
+				.(!empty($space['birthprovince']) ? ' '.$space['birthprovince'] : '')
 				.(!empty($space['birthcity']) ? ' '.$space['birthcity'] : '')
 				.(!empty($space['birthdist']) ? ' '.$space['birthdist'] : '')
 				.(!empty($space['birthcommunity']) ? ' '.$space['birthcommunity'] : '');
 	} elseif($fieldid=='residecity' && !$getalone) {
-		return $space['resideprovince']
+		return $space['residecountry']
+				.(!empty($space['resideprovince']) ? ' '.$space['resideprovince'] : '')
 				.(!empty($space['residecity']) ? ' '.$space['residecity'] : '')
 				.(!empty($space['residedist']) ? ' '.$space['residedist'] : '')
 				.(!empty($space['residecommunity']) ? ' '.$space['residecommunity'] : '');
@@ -326,7 +328,7 @@ function profile_show($fieldid, $space=array(), $getalone = false) {
 	} elseif($fieldid == 'position') {
 		return nl2br($space['office'] ? : ($space['field_position']?:$space['position']));
 	} elseif($fieldid == 'qq') {
-		return '<a href="//wpa.qq.com/msgrd?v=3&uin='.$space[$fieldid].'&site='.$_G['setting']['bbname'].'&menu=yes&from=discuz" target="_blank" title="'.lang('spacecp', 'qq_dialog').'"><img src="'.STATICURL.'/image/common/qq.gif" alt="QQ" style="margin:0px;"/></a>';
+		return '<a href="//wpa.qq.com/msgrd?v=3&uin='.$space[$fieldid].'&site='.$_G['setting']['bbname'].'&menu=yes&from=discuz" target="_blank" title="'.lang('spacecp', 'qq_dialog').'"><img src="'.STATICURL.'image/common/qq.gif" alt="QQ" style="margin:0px;"/></a>';
 	} elseif($fieldid == 'qqnumber') {
 		return $space['qq'];
 	} else {
@@ -341,7 +343,7 @@ function showdistrict($values, $elems=array(), $container='districtbox', $showle
 		return $html;
 	}
 	$showlevel = !empty($showlevel) ? intval($showlevel) : count($values);
-	$showlevel = $showlevel <= 4 ? $showlevel : 4;
+	$showlevel = $showlevel <= 5 ? $showlevel : 5;
 	$upids = array(0);
 	for($i=0;$i<$showlevel;$i++) {
 		if(!empty($values[$i])) {
@@ -353,16 +355,16 @@ function showdistrict($values, $elems=array(), $container='districtbox', $showle
 			break;
 		}
 	}
-	$options = array(1=>array(), 2=>array(), 3=>array(), 4=>array());
+	$options = array(0=>array(), 1=>array(), 2=>array(), 3=>array(), 4=>array());
 	if($upids && is_array($upids)) {
 		foreach(C::t('common_district')->fetch_all_by_upid($upids, 'displayorder', 'ASC') as $value) {
-			if($value['level'] == 1 && ($value['id'] != $values[0] && ($value['usetype'] == 0 || !(($containertype == 'birth' && in_array($value['usetype'], array(1, 3))) || ($containertype != 'birth' && in_array($value['usetype'], array(2, 3))))))) {
+			if($value['level'] == 0 && ($value['id'] != $values[0] && ($value['usetype'] == 0 || !(($containertype == 'birth' && in_array($value['usetype'], array(1, 3))) || ($containertype != 'birth' && in_array($value['usetype'], array(2, 3))))))) {
 				continue;
 			}
 			$options[$value['level']][] = array($value['id'], $value['name']);
 		}
 	}
-	$names = array('province', 'city', 'district', 'community');
+	$names = array('country', 'province', 'city', 'district', 'community');
 	for($i=0; $i<4;$i++) {
 		if(!empty($elems[$i])) {
 			$elems[$i] = dhtmlspecialchars(preg_replace("/[^\[A-Za-z0-9_\]]/", '', $elems[$i]));
@@ -372,10 +374,10 @@ function showdistrict($values, $elems=array(), $container='districtbox', $showle
 	}
 
 	for($i=0;$i<$showlevel;$i++) {
-		$level = $i+1;
+		$level = $i;
 		if(!empty($options[$level])) {
-			$jscall = "showdistrict('$container', ['$elems[0]', '$elems[1]', '$elems[2]', '$elems[3]'], $showlevel, $level, '$containertype')";
-			$html .= '<select name="'.$elems[$i].'" id="'.$elems[$i].'" class="ps" onchange="'.$jscall.'" tabindex="1">';
+			$jscall = "showdistrict('$container', ['$elems[0]', '$elems[1]', '$elems[2]', '$elems[3]', '$elems[4]'], $showlevel, $level, '$containertype')";
+			$html .= '<select name="'.$elems[$i].'" id="'.$elems[$i].'" class="ps" onchange="'.$jscall.'">';
 			$html .= '<option value="">'.lang('spacecp', 'district_level_'.$level).'</option>';
 			foreach($options[$level] as $option) {
 				$selected = $option[0] == $values[$i] ? ' selected="selected"' : '';
@@ -392,7 +394,7 @@ function countprofileprogress($uid = 0) {
 	global $_G;
 
 	$uid = intval(!$uid ? $_G['uid'] : $uid);
-	if(($profilegroup = C::t('common_setting')->fetch('profilegroup', true))) {
+	if(($profilegroup = C::t('common_setting')->fetch_setting('profilegroup', true))) {
 		$fields = array();
 		foreach($profilegroup as $type => $value) {
 			foreach($value['field'] as $key => $field) {
@@ -414,23 +416,25 @@ function countprofileprogress($uid = 0) {
 				unset($fields[$key]);
 				continue;
 			}
-			if(in_array($key, array('birthday', 'birthyear', 'birthprovince', 'birthcity', 'birthdist', 'birthcommunity', 'resideprovince', 'residecity', 'residedist', 'residecommunity'))) {
+			if(in_array($key, array('birthday', 'birthyear', 'birthcountry', 'birthprovince', 'birthcity', 'birthdist', 'birthcommunity', 'residecountry', 'resideprovince', 'residecity', 'residedist', 'residecommunity'))) {
 				if($key=='birthday') {
 					if(!empty($profile['birthyear']) || !empty($profile[$key])) {
 						$complete++;
 					}
 					unset($fields['birthyear']);
 				} elseif($key=='birthcity') {
-					if(!empty($profile['birthprovince']) || !empty($profile[$key]) || !empty($profile['birthdist']) || !empty($profile['birthcommunity'])) {
+					if(!empty($profile['birthcountry']) || !empty($profile['birthprovince']) || !empty($profile[$key]) || !empty($profile['birthdist']) || !empty($profile['birthcommunity'])) {
 						$complete++;
 					}
+					unset($fields['birthcountry']);
 					unset($fields['birthprovince']);
 					unset($fields['birthdist']);
 					unset($fields['birthcommunity']);
 				} elseif($key=='residecity') {
-					if(!empty($profile['resideprovince']) || !empty($profile[$key]) || !empty($profile['residedist']) || !empty($profile['residecommunity'])) {
+					if(!empty($profile['residecountry']) || !empty($profile['resideprovince']) || !empty($profile[$key]) || !empty($profile['residedist']) || !empty($profile['residecommunity'])) {
 						$complete++;
 					}
+					unset($fields['residecountry']);
 					unset($fields['resideprovince']);
 					unset($fields['residedist']);
 					unset($fields['residecommunity']);
