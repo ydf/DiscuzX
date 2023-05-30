@@ -77,8 +77,8 @@ function validate(theform) {
 	if(($('postsubmit').name != 'replysubmit' && !($('postsubmit').name == 'editsubmit' && !isfirstpost) && theform.subject.value == "") || !sortid && !special && trim(message) == "") {
 		showError('抱歉，您尚未输入标题或内容');
 		return false;
-	} else if(dstrlen(theform.subject.value) > 255) {
-		showError('您的标题超过 255 个字符的限制');
+	} else if(dstrlen(theform.subject.value) > 280) {
+		showError('您的标题超过 280 个字符的限制');
 		return false;
 	}
 	if(!disablepostctrl && theform.subject.value != "" && ((postminsubjectchars != 0 && dstrlen(theform.subject.value) < postminsubjectchars) || (postminsubjectchars != 0 && dstrlen(theform.subject.value) > postmaxsubjectchars))) {

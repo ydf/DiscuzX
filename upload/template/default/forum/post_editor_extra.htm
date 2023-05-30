@@ -23,6 +23,7 @@
 			<input name="subject" type="hidden" value="" />
 		<!--{else}-->
 			<!--{if $_GET[action] != 'reply'}-->
+
 				<span><input type="text" name="subject" id="subject" class="px" value="$postinfo[subject]" onkeyup="dstrLenCalc(this, 'checklen', $_G['setting']['maxsubjectsize']);" style="width: 25em" /></span>
 			<!--{else}-->
 				<span id="subjecthide" class="z">RE: $thread[subject] [<a href="javascript:;" onclick="display('subjecthide');display('subjectchk');display('subjectbox');return false;">{lang modify}</a>]</span>
@@ -30,6 +31,7 @@
 			<!--{/if}-->			
 			<span id="subjectchk"{if $_GET[action] == 'reply'} style="display:none"{/if}>{lang comment_message1} <strong id="checklen">{$_G['setting']['maxsubjectsize']}</strong> {lang comment_message2}</span>
 			<script type="text/javascript">dstrLenCalc($('subject'), 'checklen', $_G['setting']['maxsubjectsize'])</script>
+
 		<!--{/if}-->
 		<!--{if $_GET[action] == 'newthread' && !empty($modnewthreads)}--> <span class="xg1 xw0">({lang approve})</span><!--{/if}-->
 		<!--{if $_GET[action] == 'reply' && !empty($modnewreplies)}--> <span class="xg1 xw0">({lang approve})</span><!--{/if}-->

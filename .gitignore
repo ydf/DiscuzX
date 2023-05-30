@@ -1,3 +1,4 @@
+.DS_Store
 .vscode/
 .idea/
 upload/config/config_global.php

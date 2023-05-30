@@ -377,7 +377,7 @@ function checkmaxperhour($type) {
 
 function checkpost($subject, $message, $special = 0) {
 	global $_G;
-	if(dstrlen($subject) > 255) {
+	if(dstrlen($subject) > 280) {
 		return 'post_subject_toolong';
 	}
 	if(!$_G['group']['disablepostctrl'] && !$special) {
