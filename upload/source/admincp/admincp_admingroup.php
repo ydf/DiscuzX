@@ -167,8 +167,6 @@ if(!$operation) {
 				$grouplist .= "<option value=\"$group[groupid]\">$group[grouptitle]</option>\n";
 			}
 			$grouplist .= '</select>';
-			$highlight = getgpc('highlight');
-			$highlight = !empty($highlight) ? dhtmlspecialchars($highlight, ENT_QUOTES) : '';
 			cpmsg('admingroups_edit_nonexistence', 'action=admingroup&operation=edit'.(!empty($highlight) ? "&highlight=$highlight" : ''), 'form', array(), $grouplist);
 		}
 

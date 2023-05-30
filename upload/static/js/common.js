@@ -780,9 +780,7 @@ function showMenu(v) {
 				if(_all.length) {
 					for(j = 0; j < _all.length; j++) {
 						if((!_all[j]['type'] || _all[j]['type'] != 'hidden') && hasshow(_all[j])) {
-							if(_all[j].className.indexOf('hidefocus') == -1) {
-								_all[j].className += ' hidefocus';
-							}
+							_all[j].className += ' hidefocus';
 							_all[j].focus();
 							focused = true;
 							var cobj = _all[j];

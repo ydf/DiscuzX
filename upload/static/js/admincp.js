@@ -237,12 +237,15 @@ function parsetag(tag) {
 	var parse = function (tds) {
 		for(var i = 0; i < tds.length; i++) {
 			if(tds[i].getAttribute('s') == '1') {
-				tds[i].innerHTML = tds[i].innerHTML.replace(/(^|>)([^<]+)(?=<|$)/ig, function($1, $2, $3) {
-					if(tag && $3.toLowerCase().indexOf(tag.toLowerCase()) != -1) {
-						re = new RegExp(tag, "ig");
-						$3 = $3.replace(re, '<font class="highlight">$&</font>');
+				var str = tds[i].innerHTML.replace(/(^|>)([^<]+)(?=<|$)/ig, function($1, $2, $3) {
+					if(tag && $3.indexOf(tag) != -1) {
+						re = new RegExp(tag, "g");
+						$3 = $3.replace(re, '<h_>');
 					}
 					return $2 + $3;
+					});
+				tds[i].innerHTML = str.replace(/<h_>/ig, function($1, $2) {
+					return '<font class="highlight">' + tag + '</font>';
 					});
 			}
 		}
